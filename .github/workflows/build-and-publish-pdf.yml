@@ -3,7 +3,7 @@ name: Build and Publish Final Report PDF
 on:
   push:
     branches:
-      - main
+      - master
   workflow_dispatch:
 
 # Minimal permissions for reading this repository.
