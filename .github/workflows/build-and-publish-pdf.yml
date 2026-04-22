@@ -1,0 +1,69 @@
+name: Build and Publish Final Report PDF
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+# Minimal permissions for reading this repository.
+permissions:
+  contents: read
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout report repository
+        uses: actions/checkout@v4
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.0"
+
+      - name: Install bibliography dependency
+        run: gem install bibtex-ruby
+
+      - name: Generate bibliography
+        run: ruby bibtex_prettifier.rb
+
+      - name: Compile LaTeX report
+        uses: xu-cheng/latex-action@v3
+        with:
+          root_file: distributed-systems-final-report.tex
+          args: -pdf -file-line-error -halt-on-error -interaction=nonstopmode
+
+      - name: Verify PDF exists
+        run: |
+          test -f distributed-systems-final-report.pdf
+
+      - name: Checkout target repository
+        uses: actions/checkout@v4
+        with:
+          repository: AlexSantini10/distributed-sensor-hub
+          ref: main
+          token: ${{ secrets.MAIN_REPO_PAT }}
+          path: target-repo
+
+      - name: Copy PDF into target repository
+        run: |
+          mkdir -p target-repo/docs/report
+          cp distributed-systems-final-report.pdf target-repo/docs/report/distributed-sensor-hub-final-report.pdf
+
+      - name: Commit and push only if changed
+        run: |
+          cd target-repo
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/report/distributed-sensor-hub-final-report.pdf
+
+          # Skip commit/push when generated PDF is identical.
+          if git diff --cached --quiet; then
+            echo "No PDF changes to publish."
+            exit 0
+          fi
+
+          git commit -m "chore(report): update generated final report PDF"
+          git push origin main
