@@ -1,0 +1,52 @@
+{
+  "latex-workshop.latex.rootFile.useSubFile": false,
+  "latex-workshop.latex.rootFile.doNotPrompt": true,
+  "latex-workshop.latex.rootFile": "distributed-systems-final-report.tex",
+  "latex-workshop.latex.autoBuild.run": "never",
+  "latex-workshop.latex.tools": [
+    {
+      "name": "ruby-bibtex-prettifier",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-Command",
+        "if (Get-Command ruby -ErrorAction SilentlyContinue) { ruby bibtex_prettifier.rb } else { Write-Host 'Ruby not found locally: skipping bibtex_prettifier.rb'; exit 0 }"
+      ]
+    },
+    {
+      "name": "latexmk-ci",
+      "command": "latexmk",
+      "args": [
+        "-pdf",
+        "-file-line-error",
+        "-halt-on-error",
+        "-interaction=nonstopmode",
+        "-synctex=1",
+        "%DOC%"
+      ]
+    },
+    {
+      "name": "cleanup-latex-artifacts",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-Command",
+        "$base = [System.IO.Path]::Combine('%DIR%', '%DOCFILE%'); $exts = @('.aux','.bbl','.bcf','.blg','.fdb_latexmk','.fls','.lof','.lot','.nav','.out','.run.xml','.snm','.synctex.gz','.toc','.vrb','.xdv','.dvi','.ps'); foreach ($ext in $exts) { $target = \"$base$ext\"; if (Test-Path -LiteralPath $target) { Remove-Item -LiteralPath $target -Force } }"
+      ]
+    }
+  ],
+  "latex-workshop.latex.recipes": [
+    {
+      "name": "Report (CI-like)",
+      "tools": [
+        "ruby-bibtex-prettifier",
+        "latexmk-ci",
+        "cleanup-latex-artifacts"
+      ]
+    }
+  ]
+}
