@@ -1,8 +1,6 @@
 name: Build LaTeX and deploy on GitHub Releases
 on:
   push:
-    branches:
-      - '**'
     tags: '*'
     branches-ignore:
       - 'autodelivery**'
