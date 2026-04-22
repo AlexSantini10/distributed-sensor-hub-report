@@ -1,5 +1,10 @@
 # Distributed Systems Final Report
 
+## AI Usage Disclaimer
+Large Language Models (LLMs) were used as support tools during both the development of the project and the preparation of the report. Their use was limited to selected coding tasks, together with brainstorming, outlining, and drafting support.
+
+All AI-generated material was critically reviewed, validated, and, when necessary, revised or corrected by the author. The author takes full responsibility for the design and implementation of the system and for the final content of the report and repository.
+
 ## General Information
 This is the template repository for the final report of the Distributed Systems course, Master's Degree in Computer Science and Engineering, University of Bologna, Campus of Cesena, Italy.
 

@@ -9,21 +9,16 @@
 \newcommand{\emailaddr}[1]{\href{mailto:#1}{\texttt{#1}}}
 
 \title{\LARGE
-    Final Report Template\\
-    (replace with your project name)
+    Distributed Sensor Hub
 }
-\subtitle{Final Report for the Distributed Systems Course [Your academic year here]}
+\subtitle{Final Report for the Distributed Systems Course 2025/2026}
 
 % Consider watching:
 % https://www.youtube.com/watch?v=ihxSUsJB_14
 % https://www.youtube.com/watch?v=XTFWaV55uDo
 
 \author{
-    Author 1 \\ \emailaddr{author1@email.it}
-    \and
-    Author 2 \\ \emailaddr{author2@gmail.com}
-    \and
-    Author 3 \\ \emailaddr{author3@unibo.it}
+    Alex Santini \\ \emailaddr{alex.santini2@studio.unibo.it}
 }
 
 \date{\today}
@@ -33,16 +28,19 @@
 \maketitle
 
 \begin{abstract}
-    Up to $\sim$2000 characters briefly describing the project.
+This report presents the design and implementation of Distributed Sensor Hub, a distributed system for collecting, aggregating, and making available data produced by multiple sensors deployed across different nodes. The project addresses a typical distributed-systems scenario in which data must be acquired from geographically or logically separated sources, transmitted across the network, and processed in a reliable and scalable way.
+
+The system is designed to support communication among independent components, coordinate the flow of sensor data, and provide a unified access point for monitoring and interaction. Particular attention is devoted to core distributed-systems concerns such as modularity, communication between nodes, fault tolerance, availability, and deployment in a reproducible environment.
+
+The report discusses the project from requirements analysis to architectural design, implementation choices, validation activities, and deployment considerations. The resulting system serves as a concrete case study for applying distributed-systems principles to a realistic sensor-data management scenario, highlighting both the benefits and the trade-offs of distribution in terms of complexity, scalability, and robustness.
 \end{abstract}
 
-\section*{Disclaimer (if needed)}
 
-During the preparation of this work, the author(s) used [NAME TOOL / SERVICE] to [REASON].
+\section*{Disclaimer}
 
-After using this tool/service, 
-the author(s) reviewed and edited the content as needed 
-and take(s) full responsibility for the content of the final report/artifact.
+During the development of the project and the preparation of this report, the author used Large Language Models (LLMs) as support tools for selected coding tasks, as well as for brainstorming, outlining, and improving the clarity of the written text.
+
+All AI-generated contributions were critically reviewed, validated, and, when necessary, revised or corrected by the author. The author takes full responsibility for the design and implementation of the system and for the final content of this report.
 
 \section*{Quick \LaTeX{} suggestions}
 
