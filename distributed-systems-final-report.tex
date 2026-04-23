@@ -28,13 +28,13 @@
 \maketitle
 
 \begin{abstract}
-\textit{Distributed Sensor Hub} is a peer-to-peer platform that collects and disseminates sensor telemetry across multiple nodes, ensuring eventual convergence of replicated state without a central coordinator, and providing a continuously updated global view even under dynamic membership changes and partial failures.
+\textit{Distributed Sensor Hub} is a fully decentralized peer-to-peer platform for managing and replicating smart-city sensor data across multiple nodes, without any central coordinator. Each node ingests local readings through a pluggable sensor interface, maintains a local replica of global state, and exchanges updates with peers through push-pull gossip.
 
-The system combines gossip-based membership, failure detection, and push-pull state synchronization to maintain replica alignment as nodes join, leave, or become temporarily unreachable. It adopts a modular design with pluggable sensor interfaces and configurable topology policies, enabling extensibility and flexible deployment scenarios. Data convergence follows an eventually consistent model based on Last-Writer-Wins (LWW) semantics, formalized as a state-based CRDT to ensure deterministic conflict resolution and monotonic replica evolution.
+The system is not limited to synthetic data generation: in the demo setup, sensors are simulated for reproducibility, but the architecture is designed to connect real sensors as soon as their interface adapter is provided. Convergence follows an eventually consistent model with deterministic timestamp-based Last-Writer-Wins merging.
 
-Within the CAP space, the design explicitly prioritizes availability and partition tolerance over strong consistency, guaranteeing convergence once communication is restored. To sustain operability under realistic distributed conditions, the platform integrates delta-based dissemination with full-state anti-entropy recovery and exposes per-node observability APIs for inspecting topology, membership, and convergence dynamics in real time.
+To remain operational in realistic distributed environments, the design combines gossip-based membership, adaptive failure detection, and anti-entropy recovery after crashes or temporary network partitions. In CAP terms, the project prioritizes availability and partition tolerance over strong consistency, while guaranteeing convergence after communication is restored.
 
-Empirical fault-injection tests, including crash-restart and temporary network partition scenarios, demonstrate deterministic recovery and stable convergence. This combination of CRDT-based convergence, hybrid recovery mechanisms, and built-in observability provides a robust design for decentralized sensor data replication.
+Fault-injection experiments on multi-node deployments show stable recovery and consistent replica alignment after failures and partitions. The result is a robust foundation for decentralized smart-city monitoring, where data collection points are naturally distributed and continuity under partial failures is essential.
 \end{abstract}
 
 \clearpage
@@ -46,44 +46,55 @@ Empirical fault-injection tests, including crash-restart and temporary network p
 During the development of the project and the preparation of this report, the author used Large Language Models (LLMs) as auxiliary tools for limited coding support, brainstorming, and improving the clarity and structure of the written text.
 
 All outputs produced with the assistance of LLMs were critically reviewed, validated, and, when necessary, revised by the author. All architectural decisions, system design choices, and implementation details were defined and verified by the author, who takes full responsibility for the final content of this report.
-
+\\
 \section{Concept}\label{concept}
 
-Here you should explain:
-
+\textbf{Product type.}
+The project implements a \emph{distributed peer-to-peer application} for sensor \emph{management and replication} in smart-city scenarios.
+Concretely, it combines:
 \begin{itemize}
-  \item The type of product developed with that project, for example (non-exhaustive):
-  %
-  \begin{itemize}
-    \item Application (with GUI, be it mobile, web, or desktop)
-    \item Command-line application (CLI could be used by humans or scripts)
-    \item Library
-    \item Web-service(s)
-  \end{itemize}
-
-  \item Use case description:
-  %
-  \begin{itemize}
-    \item \emph{what} is the software doing?
-    \item \emph{where} are the users?
-    \item \emph{when} and \emph{how frequently} do they interact with the system?
-    \item \emph{how} do they \emph{interact} with the system? which \emph{devices} are they using?
-    \item does the system need to \emph{store} user's \textbf{data}? \emph{which}? \emph{where}?
-    \item most likely, there will be \emph{multiple} \textbf{roles}
-  \end{itemize}
-
-  \item Why is distribution needed?
-  %
-  \begin{itemize}
-    \item geographically distributed environments?
-    \item computation speedup?
-    \item resource sharing?
-    \item fault tolerance?
-    \item other reasons?
-  \end{itemize}
-  %
-  In any case, please elaborate.
+  \item a node runtime service (Python process) handling sensor ingestion, replication, membership, failure detection, and protocol logic;
+  \item inter-node TCP-based communication services (custom protocol);
+  \item an optional observability layer for real-time monitoring.
 \end{itemize}
+
+\textbf{Use case description.}
+The software manages a cluster of sensor nodes that ingest readings and disseminate updates to peers, so that each node converges toward a coherent global view (eventual consistency with deterministic LWW conflict resolution).
+
+In the current demo, sensor streams are simulated; however, the same ingestion interface allows integration of real sensor sources with no architectural changes to replication logic.
+
+Typical users are smart-city monitoring stakeholders with two main human interaction profiles:
+\begin{itemize}
+  \item \emph{observational interaction} (control-room operators): inspect live sensor values and cluster status;
+  \item \emph{operational interaction} (technical operators): start/stop nodes, apply configuration changes, and run recovery or fault-handling procedures.
+\end{itemize}
+
+Machine-to-machine interaction is \emph{continuous and periodic}: heartbeat exchange, gossip rounds, push-pull synchronization, and recovery synchronization after outages.
+
+Interaction channels and devices:
+\begin{itemize}
+  \item terminal/CLI for deployment and configuration;
+  \item monitoring clients and automated tests for system observability;
+  \item desktop/laptop web browser for optional dashboard-based monitoring.
+\end{itemize}
+
+Data handling and roles:
+\begin{itemize}
+  \item nodes store replicated sensor records, membership/liveness metadata, topology snapshots, and introspection counters/events (node-local, runtime state);
+  \item optional log files provide operational traces;
+  \item main roles include: \emph{node process} (autonomous participant), \emph{cluster operator/developer}, and \emph{observer client} (UI/tests/tools).
+\end{itemize}
+
+\textbf{Why distribution is needed.}
+Distribution is a core requirement, not an implementation detail:
+\begin{itemize}
+  \item \emph{fault tolerance and resilience}: no single coordinator; nodes can continue under crashes/restarts and temporary partitions;
+  \item \emph{eventual convergence at scale}: each node contributes updates and receives others through push/pull plus gossip dissemination;
+  \item \emph{resource and workload sharing}: sensing, merge, and communication work are spread across peers;
+  \item \emph{realistic decentralized environments}: smart-city infrastructures are geographically distributed by nature, so data is produced at the edge and synchronized across independent participants.
+\end{itemize}
+
+Overall, the project targets robust decentralized operation with observable, testable behavior under partial failures and dynamic cluster conditions.
 
 \section{Requirements Elicitation and Analysis}\label{requirements}
 
