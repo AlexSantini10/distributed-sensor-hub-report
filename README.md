@@ -5,6 +5,17 @@ Large Language Models (LLMs) were used as support tools during both the developm
 
 All AI-generated material was critically reviewed, validated, and, when necessary, revised or corrected by the author. The author takes full responsibility for the design and implementation of the system and for the final content of the report and repository.
 
+## latex suggestions
+Short notes from the professor template, kept here for future reuse:
+
+1. Use `\cite{...}` with keys from `references.bib` (DBLP is a good source for BibTeX entries).
+2. For images, use the `figure` environment with `\includegraphics`, then add `\caption{...}` and `\label{...}`.
+3. Refer to figures with `\cref{...}`.
+4. Keep images under the `figures` directory.
+5. Avoid forced figure placement options like `[h]` or `[h!]`; let LaTeX manage floats.
+6. Apply the same floating rule to tables/algorithms/listings.
+7. Do not break lines with `\\` or `\newline`; separate paragraphs with an empty line.
+
 ## General Information
 This is the template repository for the final report of the Distributed Systems course, Master's Degree in Computer Science and Engineering, University of Bologna, Campus of Cesena, Italy.
 
