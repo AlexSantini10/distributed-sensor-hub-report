@@ -28,12 +28,15 @@
 \maketitle
 
 \begin{abstract}
-This report presents the design and implementation of Distributed Sensor Hub, a distributed system for collecting, aggregating, and making available data produced by multiple sensors deployed across different nodes. The project addresses a typical distributed-systems scenario in which data must be acquired from geographically or logically separated sources, transmitted across the network, and processed in a reliable and scalable way.
+\textit{Distributed Sensor Hub} is a peer-to-peer platform that collects and disseminates sensor telemetry across multiple nodes, ensuring eventual convergence of replicated state without a central coordinator, and providing a continuously updated global view even under dynamic membership changes and partial failures.
 
-The system is designed to support communication among independent components, coordinate the flow of sensor data, and provide a unified access point for monitoring and interaction. Particular attention is devoted to core distributed-systems concerns such as modularity, communication between nodes, fault tolerance, availability, and deployment in a reproducible environment.
+The system combines gossip-based membership, failure detection, and push-pull state synchronization to maintain replica alignment as nodes join, leave, or become temporarily unreachable. It adopts a modular design with pluggable sensor interfaces and configurable topology policies, enabling extensibility and flexible deployment scenarios. Data convergence follows an eventually consistent model based on Last-Writer-Wins (LWW) semantics, formalized as a state-based CRDT to ensure deterministic conflict resolution and monotonic replica evolution.
 
-The report discusses the project from requirements analysis to architectural design, implementation choices, validation activities, and deployment considerations. The resulting system serves as a concrete case study for applying distributed-systems principles to a realistic sensor-data management scenario, highlighting both the benefits and the trade-offs of distribution in terms of complexity, scalability, and robustness.
+Within the CAP space, the design explicitly prioritizes availability and partition tolerance over strong consistency, guaranteeing convergence once communication is restored. To sustain operability under realistic distributed conditions, the platform integrates delta-based dissemination with full-state anti-entropy recovery and exposes per-node observability APIs for inspecting topology, membership, and convergence dynamics in real time.
+
+Empirical fault-injection tests, including crash-restart and temporary network partition scenarios, demonstrate deterministic recovery and stable convergence. This combination of CRDT-based convergence, hybrid recovery mechanisms, and built-in observability provides a robust design for decentralized sensor data replication.
 \end{abstract}
+
 
 
 \section*{Disclaimer}
