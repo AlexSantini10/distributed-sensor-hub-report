@@ -1,14 +1,119 @@
 \section{User Guide}\label{user-guide}
 
+Questa sezione descrive l'uso operativo del sistema dal punto di vista dell'utente tecnico che desidera avviare il cluster, osservare la convergenza dello stato e consultare le superfici di introspection. Poich\'e il progetto non espone funzionalit\`a di scrittura verso l'esterno, l'interazione principale consiste nell'avviare i nodi, attendere l'evoluzione del sistema distribuito e analizzarne il comportamento mediante API HTTP e dashboard Web.
+
+\subsection{Avvio del sistema}
+
+L'utilizzo pi\`u efficace per la dimostrazione consiste nell'avviare una topologia Docker gi\`a predisposta. Lo scenario consigliato \`e quello a sei nodi:
+\begin{verbatim}
+docker compose -f docker/docker-compose-6-nodes.yml up --build -d
+\end{verbatim}
+
+Dopo l'avvio \`e opportuno attendere alcuni secondi affinch\'e i nodi completino bootstrap, scambio della peer list, primi heartbeat e prime repliche di stato. L'effetto atteso \`e la progressiva comparsa di una vista condivisa della membership e di record sensore replicati fra i nodi.
+
+Per arrestare il cluster:
+\begin{verbatim}
+docker compose -f docker/docker-compose-6-nodes.yml down
+\end{verbatim}
+
+\subsection{Consultazione diretta delle API}
+
+Ogni nodo espone una Web API read-only sulla porta definita da \texttt{WEB\_API\_PORT}. Gli endpoint pi\`u utili durante l'uso sono:
 \begin{itemize}
-  \item how to use your software?
-  %
-  \begin{itemize}
-    \item provide instructions
-    \item provide expected outcomes
-    \item provide screenshots if possible
-  \end{itemize}
+  \item \texttt{/api/state}: snapshot dello stato sensori replicato;
+  \item \texttt{/api/updates}: stream o vista degli aggiornamenti recenti;
+  \item \texttt{/api/membership}: vista locale della membership;
+  \item \texttt{/api/topology}: rappresentazione della topologia conosciuta;
+  \item \texttt{/api/introspection}: snapshot aggregato secondo il contratto \texttt{introspection/v1};
+  \item \texttt{/api/introspection/events}: eventi recenti di control plane;
+  \item \texttt{/api/introspection/metrics}: contatori e indicatori relativi alla replica.
 \end{itemize}
+
+Ad esempio, in una topologia base, il nodo \texttt{node-1} \`e normalmente raggiungibile su \texttt{http://localhost:10000}. Interrogando l'endpoint aggregato \texttt{/api/introspection} si ottiene una vista utile a verificare:
+\begin{itemize}
+  \item quali peer sono attualmente considerati \texttt{alive}, \texttt{suspected} o \texttt{dead};
+  \item quali record sensore sono noti al nodo interrogato;
+  \item quanti round di replica e messaggi di gossip sono stati osservati;
+  \item se il buffer dei delta \`e sufficiente oppure produce \texttt{DELTA\_UNAVAILABLE}.
+\end{itemize}
+
+\subsection{Uso della dashboard Web}
+
+Per un'osservazione pi\`u comoda \`e disponibile una dashboard statica nella directory \texttt{web/}. Essa non richiede backend aggiuntivi e consuma esclusivamente l'endpoint \texttt{/api/introspection}. Per avviarla:
+\begin{verbatim}
+cd web
+python -m http.server 8080
+\end{verbatim}
+
+Successivamente \`e sufficiente aprire nel browser l'indirizzo \texttt{http://localhost:8080} e impostare come \emph{API Base URL} l'endpoint HTTP di uno dei nodi, ad esempio \texttt{http://localhost:10000}.
+
+La dashboard rende disponibili le principali viste di analisi:
+\begin{itemize}
+  \item grafo della topologia osservata;
+  \item stato dei peer e relativa semantica di liveness;
+  \item tabella dei sensori replicati con origine e timestamp;
+  \item timeline degli eventi recenti;
+  \item striscia di metriche sintetiche per gossip, full sync e delta replication.
+\end{itemize}
+
+L'esito atteso, in un cluster stabile, \`e una topologia connettivamente coerente, una majority dei peer in stato \texttt{alive} e timestamp dei sensori relativamente recenti per le sorgenti a frequenza elevata.
+
+\subsection{Interpretazione dei principali segnali osservabili}
+
+Durante l'uso del sistema \`e utile interpretare alcuni indicatori operativi:
+\begin{itemize}
+  \item se compaiono molti eventi \texttt{sensor\_update\_received} con \texttt{applied:false}, significa che il nodo riceve aggiornamenti gi\`a superati dal criterio LWW;
+  \item se il contatore \texttt{get\_delta\_unavailable\_total} cresce, il buffer dei delta incrementali potrebbe essere troppo corto rispetto al carico o ai tempi di riconnessione;
+  \item se un peer passa frequentemente da \texttt{alive} a \texttt{suspected}, \`e plausibile che la rete simulata o l'intervallo degli heartbeat stiano introducendo transienti visibili dal failure detector;
+  \item se i timestamp dei sensori appaiono troppo vecchi nella UI, \`e opportuno ridurre la pressione di pull oppure aumentare \texttt{REPLICATION\_DELTA\_MAXLEN}.
+\end{itemize}
+
+La dashboard \`e quindi non solo uno strumento dimostrativo, ma una componente importante per la diagnosi sperimentale del comportamento distribuito.
+
+\subsection{Scenari di uso consigliati}
+
+Dal punto di vista didattico e dimostrativo, gli scenari pi\`u significativi sono i seguenti:
+\begin{itemize}
+  \item \textbf{convergenza in condizioni normali}: avvio del cluster e osservazione della progressiva uniformazione dello stato;
+  \item \textbf{crash e recovery}: arresto temporaneo di un nodo e verifica del catch-up tramite delta o full sync;
+  \item \textbf{rete degradata}: uso di ritardi e perdita pacchetti configurati nel Compose per osservare effetti su heartbeat e freschezza dei dati;
+  \item \textbf{scalabilit\`a osservabile}: confronto tra topologie a 2, 6 e 12 nodi tramite la stessa UI.
+\end{itemize}
+
+Per scenari di fault injection ripetuti \`e disponibile anche lo script \texttt{manual\_tests/compose\_chaos.py}, utile per introdurre arresti e riavvii controllati di singoli servizi durante l'esecuzione del cluster.
+
+\subsection{Uso di un'immagine pubblicata tramite release}
+
+Se non si desidera costruire localmente l'immagine Docker, \`e possibile usare direttamente una release generata dalla pipeline di continuous delivery. La release non viene per\`o creata a ogni commit: essa viene prodotta quando a un commit viene assegnato un tag di versione, ad esempio \texttt{v1.0.0}, associato all'immagine del nodo caricata su GitHub Container Registry.
+
+Il flusso operativo \`e il seguente:
+\begin{enumerate}
+  \item creare localmente il tag di versione e pubblicarlo sul repository remoto;
+  \item aprire la sezione \emph{Releases} del repository;
+  \item selezionare la release corrispondente al commit desiderato;
+  \item copiare il comando \texttt{docker pull} basato su digest riportato nella release o nel file allegato;
+  \item eseguire il container definendo almeno \texttt{NODE\_ID}, \texttt{HOST}, \texttt{PORT}, \texttt{WEB\_API\_PORT} e, se necessario, \texttt{BOOTSTRAP\_PEERS}.
+\end{enumerate}
+
+Un esempio di pubblicazione della release \`e:
+\begin{verbatim}
+git tag v1.0.0
+git push origin v1.0.0
+\end{verbatim}
+
+Un esempio tipico di esecuzione \`e:
+\begin{verbatim}
+docker pull ghcr.io/<owner>/<repo>@sha256:<digest>
+docker run --rm -p 9000:9000 -p 10000:10000 \
+  -e NODE_ID=node-1 \
+  -e HOST=0.0.0.0 \
+  -e PORT=9000 \
+  -e WEB_API_PORT=10000 \
+  -e BOOTSTRAP_PEERS= \
+  ghcr.io/<owner>/<repo>@sha256:<digest>
+\end{verbatim}
+
+Questa modalit\`a \`e utile quando si vuole eseguire rapidamente un nodo coerente con uno specifico commit del branch principale, mantenendo al tempo stesso la riproducibilit\`a dell'ambiente tramite riferimento immutabile al digest dell'immagine.
 
 \clearpage
 
