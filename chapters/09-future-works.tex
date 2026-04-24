@@ -1,7 +1,65 @@
 \section{Future works}\label{future-works}
 
-Possible future extensions include stronger security mechanisms, persistent storage for historical sensor data, richer external integrations, and broader experimentation with larger topologies or heterogeneous sensor sources.
+Sebbene il progetto raggiunga gli obiettivi didattici prefissati in termini di replica distribuita, convergenza eventuale e osservabilit\`a, l'architettura realizzata lascia spazio a diverse estensioni significative, sia dal punto di vista ingegneristico sia da quello sperimentale.
 
-Another useful direction would be to integrate more advanced monitoring and analysis capabilities, including long-term trend collection, alerting, and comparative evaluation of alternative dissemination or merge strategies.
+\subsection{Sicurezza e hardening operativo}
+
+La prima area di evoluzione riguarda la sicurezza. Nella versione attuale il sistema opera in un contesto controllato e non implementa autenticazione dei peer, protezione dell'API HTTP n\'e cifratura dei canali. Un'evoluzione naturale consisterebbe nell'introdurre:
+\begin{itemize}
+  \item autenticazione reciproca tra nodi;
+  \item protezione degli endpoint HTTP mediante token o mTLS;
+  \item validazione pi\`u stringente dell'identit\`a logica del mittente rispetto al canale di trasporto;
+  \item policy di autorizzazione per distinguere ruoli osservativi e amministrativi.
+\end{itemize}
+
+Queste modifiche renderebbero il sistema pi\`u vicino a uno scenario reale, nel quale la tolleranza ai guasti deve convivere con requisiti minimi di trust e protezione del piano di controllo.
+
+\subsection{Persistenza e storico dei dati}
+
+Attualmente i nodi mantengono soltanto stato volatile in memoria. Questa scelta \`e coerente con il focus del progetto, ma limita la capacit\`a del sistema di sopravvivere a riavvii estesi o di offrire analisi temporali di lungo periodo. Un'estensione rilevante sarebbe quindi l'introduzione di:
+\begin{itemize}
+  \item persistenza locale dei record sensore e dei delta recenti;
+  \item snapshot periodiche del metadata di membership e topology;
+  \item meccanismi di restore all'avvio per ridurre il costo di bootstrap;
+  \item archiviazione storica separata per analisi offline e confronto tra run sperimentali.
+\end{itemize}
+
+Questa evoluzione aprirebbe anche la possibilit\`a di confrontare in modo pi\`u rigoroso comportamento \emph{cold start}, tempi di recovery e perdita temporanea di informazione dopo crash estesi.
+
+\subsection{Semantiche di replica pi\`u ricche}
+
+Il criterio Last-Writer-Wins adottato \`e semplice, deterministico e adatto al contesto del progetto, ma costituisce anche una semplificazione. In prospettiva sarebbe interessante valutare:
+\begin{itemize}
+  \item l'uso di CRDT specifici per particolari tipi di dato;
+  \item merge policies differenziate per categoria di sensore;
+  \item version vector o metadata causali per distinguere meglio concorrenza reale e semplice arrivo tardivo;
+  \item strategie adattive tra replica incrementale e full sync in funzione del grado di divergenza osservato.
+\end{itemize}
+
+Queste estensioni consentirebbero di studiare in modo pi\`u approfondito il compromesso fra semplicit\`a implementativa, quantit\`a di metadata scambiati e qualit\`a semantica della convergenza.
+
+\subsection{Sperimentazione su topologie pi\`u ampie}
+
+Un'altra direzione naturale riguarda l'ampliamento della scala sperimentale. Le topologie attuali permettono gi\`a di osservare fenomeni interessanti, ma un'estensione a cluster pi\`u grandi o con connettivit\`a pi\`u eterogenea renderebbe possibile:
+\begin{itemize}
+  \item valutare l'impatto della densit\`a della topologia sul traffico di gossip;
+  \item studiare la sensibilit\`a del failure detector in reti meno regolari;
+  \item confrontare fan-out, intervalli di sync e dimensione dei delta buffer su carichi superiori;
+  \item verificare la leggibilit\`a e la sostenibilit\`a dell'osservabilit\`a al crescere del numero di nodi.
+\end{itemize}
+
+Da un punto di vista sperimentale, sarebbe inoltre utile affiancare metriche quantitative sistematiche su latenze di convergenza, volume di traffico e costi di recovery.
+
+\subsection{Osservabilit\`a avanzata e strumenti di analisi}
+
+Il progetto dispone gi\`a di una buona base di introspection read-only, ma essa potrebbe essere ulteriormente estesa tramite:
+\begin{itemize}
+  \item esportazione di metriche verso stack standard di monitoring;
+  \item alerting automatico su soglie critiche di stale data o \texttt{DELTA\_UNAVAILABLE};
+  \item tracciamento temporale persistente degli eventi di control plane;
+  \item comparazione automatizzata tra differenti configurazioni di replica e failure detection.
+\end{itemize}
+
+In questo modo il sistema diventerebbe non solo un prototipo funzionale, ma anche una piattaforma sperimentale pi\`u matura per analizzare in maniera sistematica le conseguenze delle scelte architetturali.
 
 \clearpage
