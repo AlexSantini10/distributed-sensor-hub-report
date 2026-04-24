@@ -1,46 +1,78 @@
 \section{Validation}\label{validation}
 
+La validazione del progetto \`e stata progettata su pi\`u livelli, in modo da verificare sia la correttezza funzionale dei singoli moduli sia il comportamento emergente del sistema distribuito in presenza di replicazione, guasti e riconnessione. La strategia adottata combina test unitari, test di integrazione, smoke test in ambiente containerizzato e scenari manuali di osservazione, con l'obiettivo di coprire l'intero ciclo di vita di un nodo: avvio, bootstrap, propagazione dello stato, failure detection, recovery e introspection.
+
 \subsection{Automatic Testing}\label{automatic-testing}
 
+\textbf{Test unitari.}
+La base del piano di validazione \`e costituita da una suite di test unitari sviluppata con \texttt{pytest}. I test unitari verificano in isolamento le responsabilit\`a dei moduli principali del sistema:
 \begin{itemize}
-  \item how were individual components \textbf{\emph{unit}-test}ed?
-  
-  \item how was communication, interaction, and/or integration among components tested?
-  
-  \item how to \textbf{\emph{end-to-end}-test} the system?
-  %
-  \begin{itemize}
-    \item e.g.~production vs.~test environment
-  \end{itemize}
-
-  \item for each test specify:
-  %
-  \begin{itemize}
-    \item rationale of individual tests
-    \item how were the test automated
-    \item how to run them
-    \item which requirement they are testing, if any
-  \end{itemize}
+  \item \texttt{tests/protocol/}: correttezza di serializzazione, deserializzazione, validazione e dispatch dei messaggi del protocollo applicativo;
+  \item \texttt{tests/networking/}: framing TCP, gestione delle connessioni client/server, limiti operativi e robustezza del trasporto;
+  \item \texttt{tests/state/}: applicazione deterministica della politica Last-Writer-Wins e mantenimento dei delta incrementali;
+  \item \texttt{tests/membership/} e \texttt{tests/fd/}: aggiornamento della vista membership, heartbeat handling e stima \emph{phi-accrual} per la classificazione dei peer;
+  \item \texttt{tests/sensors/}: comportamento dei generatori di sensori simulati e del relativo lifecycle manager;
+  \item \texttt{tests/webapi/} e \texttt{tests/introspection/}: coerenza degli endpoint HTTP in sola lettura e del contratto di introspection esportato ai client.
 \end{itemize}
 
-\begin{quote}
-recall that \emph{deployment} \textbf{automation} is commonly used to \emph{test} the system in \emph{production-like} environment
-\end{quote}
+Il razionale di questa suite \`e duplice: da un lato impedire regressioni nei componenti a semantica locale, dall'altro rendere esplicite le invarianti che il sistema deve preservare indipendentemente dalla topologia distribuita. Al momento della verifica locale del repository, l'esecuzione del comando \texttt{python -m pytest -m "not integration" -q} ha prodotto \texttt{180 passed, 9 deselected}, confermando la stabilit\`a della parte non integrata della suite.
 
-\begin{quote}
-recall to test corner cases (crashes, errors, etc.)
-\end{quote}
+\textbf{Test di integrazione in-process.}
+Una seconda fascia di validazione esercita l'interazione tra pi\`u nodi reali eseguiti nello stesso processo di test o in processi coordinati da harness dedicati. In particolare:
+\begin{itemize}
+  \item \texttt{tests/integration/test\_deterministic\_state\_convergence.py} verifica la convergenza dello stato replicato in un cluster di sei nodi, controllando che i vincitori LWW finali coincidano con quelli attesi;
+  \item \texttt{tests/integration/test\_cluster\_harness.py} valida il corretto funzionamento dell'infrastruttura di supporto per scenari distribuiti riproducibili;
+  \item \texttt{tests/integration/test\_finite\_test\_sensor.py} usa sorgenti deterministiche per rendere osservabili e confrontabili le sequenze di aggiornamenti tra nodi.
+\end{itemize}
+
+Questi test coprono propriet\`a che non possono essere inferite dalla sola correttezza locale: propagazione incrementale, ordine relativo degli aggiornamenti, bootstrap iniziale e convergenza eventuale dopo scambi multipli di messaggi.
+
+\textbf{Test di integrazione Docker-based e scenari production-like.}
+La terza fascia di validazione impiega topologie Docker Compose per esercitare il software in un ambiente pi\`u vicino al deployment reale. In questa categoria rientrano:
+\begin{itemize}
+  \item \texttt{tests/integration/test\_docker\_deterministic\_state\_convergence.py}, che replica la verifica di convergenza su nodi containerizzati;
+  \item \texttt{tests/integration/test\_docker\_crash\_restart\_recovery.py}, che valuta il recupero dopo arresto e riavvio di un nodo;
+  \item \texttt{tests/integration/test\_docker\_partition\_reconciliation.py}, che verifica la riconciliazione dello stato dopo una discontinuit\`a di connettivit\`a;
+  \item \texttt{tests/integration/verify\_cluster.py}, usato come smoke test per controllare l'avvio corretto del cluster e la raggiungibilit\`a degli endpoint principali.
+\end{itemize}
+
+Il vantaggio di questa soluzione \`e che lo stesso assetto di deployment impiegato per la dimostrazione viene riutilizzato come infrastruttura di test. In questo modo si riduce la distanza tra ambiente di sviluppo, ambiente di verifica e ambiente di presentazione, migliorando la riproducibilit\`a degli esperimenti.
+
+\textbf{Automazione dell'esecuzione.}
+L'esecuzione automatica dei test \`e supportata anche da workflow CI definiti in \texttt{.github/workflows/unit-tests.yml} e \texttt{.github/workflows/integration-tests.yml}. La pipeline di unit test installa le dipendenze e lancia \texttt{pytest} escludendo i test di integrazione, mentre la pipeline di integrazione esegue sia un controllo di convergenza deterministica sia uno smoke test su cluster Docker. Questa automazione permette di intercettare regressioni sia nella logica locale sia negli scenari distribuiti pi\`u significativi.
+
+\textbf{Come eseguire i test.}
+Le modalit\`a principali di esecuzione, gi\`a documentate nel repository, sono le seguenti:
+\begin{itemize}
+  \item test unitari e modulari: \texttt{pytest --maxfail=1} oppure \texttt{python -m pytest -v -m "not integration"};
+  \item test di protocollo: \texttt{pytest -m protocol};
+  \item verifica mirata della convergenza LWW: \texttt{python -m pytest tests/integration/test\_deterministic\_state\_convergence.py -q -s};
+  \item smoke test Docker: avvio della topologia Compose seguito da \texttt{python tests/integration/verify\_cluster.py --timeout 60 --interval 2}.
+\end{itemize}
+
+\textbf{Copertura rispetto agli obiettivi progettuali.}
+Nel loro insieme, i test automatizzati coprono i punti pi\`u importanti emersi nei requisiti di progetto:
+\begin{itemize}
+  \item correttezza del protocollo di comunicazione e delle sue validazioni;
+  \item convergenza deterministica dello stato replicato;
+  \item propagazione della membership e dell'informazione di liveness;
+  \item tolleranza a crash, riavvio e partizione temporanea;
+  \item verificabilit\`a esterna tramite API HTTP e introspection.
+\end{itemize}
 
 \subsection{Acceptance test}\label{acceptance-test}
 
+Accanto alla validazione automatica sono stati eseguiti anche test manuali di accettazione, orientati soprattutto agli aspetti osservabili e sperimentali del sistema. Tali prove sono state condotte mediante:
 \begin{itemize}
-  \item did you perform any \emph{manual} testing?
-  %
-  \begin{itemize}
-    \item what did you test?
-    \item why wasn't it automatic?
-  \end{itemize}
+  \item avvio di cluster Docker a 2, 6 e 12 nodi;
+  \item consultazione diretta degli endpoint \texttt{/api/state}, \texttt{/api/membership}, \texttt{/api/introspection} e delle relative viste derivate;
+  \item utilizzo della dashboard statica in \texttt{web/} per osservare topologia, eventi recenti, metriche di replica e stato dei peer;
+  \item esecuzione dello script \texttt{manual\_tests/compose\_chaos.py} per arrestare e riavviare selettivamente un servizio durante l'esecuzione del cluster.
 \end{itemize}
+
+Questi test manuali hanno avuto l'obiettivo di confermare propriet\`a difficili da catturare completamente con sole asserzioni automatiche: leggibilit\`a dello stato esportato, qualit\`a dell'osservabilit\`a, coerenza temporale delle dashboard e comportamento percepibile del sistema durante riconfigurazioni e transienti di rete.
+
+La componente manuale non sostituisce la suite automatica, ma la integra. In particolare, \`e risultata utile quando il criterio di accettazione era anche qualitativo, ad esempio nella valutazione della chiarezza delle informazioni mostrate all'utente o nella diagnosi visuale di fenomeni come pull storm, ritardi accumulati o rapidi cambi di stato nella membership.
 
 \clearpage
 
