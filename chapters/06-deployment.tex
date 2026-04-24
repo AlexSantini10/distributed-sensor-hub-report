@@ -1,20 +1,124 @@
 \section{Deployment}\label{deployment}
 
-\begin{itemize}
-  \item should one install your software from scratch, how to do it?
-  %
-  \begin{itemize}
-    \item provide instructions
-    \item provide expected outcomes
-  \end{itemize}
+Il deployment del progetto \`e stato progettato con due obiettivi complementari: permettere l'esecuzione rapida su una singola macchina per attivit\`a di sviluppo e debug, e garantire al tempo stesso la riproducibilit\`a di topologie multi-nodo tramite containerizzazione. La distribuzione del sistema non richiede infrastrutture esterne, orchestratori dedicati o servizi persistenti di supporto: ogni nodo esegue in autonomia la propria logica di rete, replica, failure detection e osservabilit\`a HTTP.
 
-  \item what software should be installed on the machines to run your project? which versions?
-  
-  \item should one set environment variables or configuration files?
-  
-  \item if you're using containerization (e.g.~Docker), 
-  describe how you engineered your deployment scrips (e.g. \texttt{docker-compose.yml} files)
+\subsection{Prerequisiti software}
+
+Per eseguire il progetto da zero sono necessari i seguenti strumenti:
+\begin{itemize}
+  \item una versione recente di \textbf{Python 3}; la pipeline CI del repository valida esplicitamente l'esecuzione con \texttt{Python 3.12};
+  \item \textbf{pip} per l'installazione delle dipendenze Python;
+  \item \textbf{Docker} e \textbf{Docker Compose} per l'avvio delle topologie containerizzate;
+  \item facoltativamente, un browser Web per consultare la dashboard di osservabilit\`a e gli endpoint HTTP esposti dai nodi.
 \end{itemize}
+
+Le dipendenze runtime sono volutamente minime e sono definite in \texttt{requirements.txt}; gli strumenti di sviluppo e analisi statica sono invece raccolti in \texttt{requirements-dev.txt} e nel file \texttt{package.json} per la sola dipendenza di \texttt{pyright}.
+
+\subsection{Installazione locale}
+
+L'installazione base del progetto segue una procedura lineare:
+\begin{enumerate}
+  \item clonare il repository;
+  \item entrare nella directory del progetto;
+  \item installare le dipendenze Python richieste.
+\end{enumerate}
+
+Una possibile sequenza operativa \`e la seguente:
+\begin{verbatim}
+git clone https://github.com/AlexSantini10/distributed-sensor-hub.git
+cd distributed-sensor-hub
+pip install -r requirements.txt
+\end{verbatim}
+
+Al termine dell'installazione, il repository \`e pronto sia per l'esecuzione diretta di un singolo nodo sia per il lancio dei test automatici. Un primo controllo consigliato consiste nell'eseguire \texttt{python -m pytest -m "not integration" -q}, cos\`i da verificare immediatamente la coerenza dell'ambiente locale.
+
+\subsection{Configurazione tramite environment variables}
+
+L'intera configurazione operativa del nodo \`e esternalizzata attraverso variabili d'ambiente. Questo approccio rende il deployment semplice da replicare sia in locale sia nei container, evitando la dipendenza da file di configurazione rigidi e consentendo di descrivere topologie diverse senza modificare il codice.
+
+Il file \texttt{.env.example} documenta le variabili principali, tra cui:
+\begin{itemize}
+  \item identificazione e binding del nodo: \texttt{NODE\_ID}, \texttt{HOST}, \texttt{PORT}, \texttt{WEB\_API\_PORT};
+  \item bootstrap iniziale: \texttt{BOOTSTRAP\_PEERS};
+  \item limiti del server TCP: \texttt{SOCKET\_TIMEOUT}, \texttt{ACCEPT\_QUEUE\_SIZE}, \texttt{MAX\_CONNECTIONS}, \texttt{MAX\_WORKERS};
+  \item parametri del failure detector: \texttt{PHI\_THRESHOLD\_SUSPECT}, \texttt{PHI\_THRESHOLD\_DEAD}, \texttt{PHI\_INITIAL\_INTERVAL\_S};
+  \item cadenza della replica push/pull: \texttt{GOSSIP\_SYNC\_INTERVAL\_MS}, \texttt{GOSSIP\_PUSH\_*}, \texttt{GOSSIP\_PULL\_*};
+  \item simulazione di ritardi e perdite di rete: \texttt{NETWORK\_DELAY\_*}, \texttt{NETWORK\_PACKET\_LOSS\_PROB};
+  \item definizione dei sensori locali: \texttt{SENSORS} e famiglia \texttt{SENSOR\_<i>\_*}.
+\end{itemize}
+
+Il risultato pratico \`e che la stessa immagine software pu\`o assumere ruoli diversi semplicemente cambiando il set di variabili, caratteristica utile sia per i test sia per le dimostrazioni in aula.
+
+\subsection{Esecuzione di un singolo nodo}
+
+Per un'esecuzione minimale in locale \`e sufficiente definire alcune variabili essenziali e avviare \texttt{node.py}. Un esempio in PowerShell \`e:
+\begin{verbatim}
+$env:NODE_ID="node-1"
+$env:HOST="0.0.0.0"
+$env:PORT="9000"
+$env:BOOTSTRAP_PEERS=""
+$env:WEB_API_PORT="10000"
+python node.py
+\end{verbatim}
+
+L'esito atteso \`e l'avvio del nodo con listener TCP e server HTTP attivi. In questa modalit\`a il sistema \`e gi\`a interrogabile tramite API Web, ad esempio sugli endpoint \texttt{/api/state}, \texttt{/api/membership} e \texttt{/api/introspection}.
+
+\subsection{Deployment containerizzato}
+
+Il deployment multi-nodo \`e basato su Docker Compose. Il repository include pi\`u file Compose, ciascuno orientato a un diverso scenario sperimentale:
+\begin{itemize}
+  \item \texttt{docker/docker-compose-base.yml}: topologia minima e veloce da avviare, utile per smoke test e demo rapide;
+  \item \texttt{docker/docker-compose-6-nodes.yml}: scenario intermedio, adatto a osservare in modo chiaro la convergenza dello stato e i fenomeni di gossip;
+  \item \texttt{docker/docker-compose-12-nodes.yml}: scenario pi\`u denso, pensato per stressare la disseminazione e la leggibilit\`a dell'osservabilit\`a;
+  \item file Compose dedicati ai test di integrazione: usati per scenari deterministici e validazione automatica.
+\end{itemize}
+
+L'avvio avviene con comandi del tipo:
+\begin{verbatim}
+docker compose -f docker/docker-compose-base.yml up --build -d
+docker compose -f docker/docker-compose-6-nodes.yml up --build -d
+docker compose -f docker/docker-compose-12-nodes.yml up --build -d
+\end{verbatim}
+
+Il risultato atteso \`e la creazione di pi\`u container omogenei, ciascuno con:
+\begin{itemize}
+  \item una propria identit\`a logica (\texttt{NODE\_ID});
+  \item porte TCP e HTTP distinte esposte verso l'host;
+  \item set dedicati di sensori simulati;
+  \item parametri di rete e replica configurati in modo indipendente;
+  \item cartella log condivisa montata come volume per l'ispezione esterna.
+\end{itemize}
+
+\subsection{Ingegnerizzazione dei file Compose}
+
+I file \texttt{docker-compose} non si limitano a istanziare copie identiche del nodo, ma codificano scenari di laboratorio con profili eterogenei. In particolare:
+\begin{itemize}
+  \item i peer di bootstrap sono distribuiti tra i nodi per evitare una dipendenza da un singolo punto iniziale di contatto;
+  \item i sensori differiscono per tipo, periodicit\`a, latenza e unit\`a di misura, cos\`i da simulare carichi non uniformi;
+  \item alcuni nodi introducono deliberatamente ritardi, jitter o probabilit\`a di perdita pi\`u elevate, in modo da rendere osservabili fenomeni di degrado e recovery;
+  \item la dimensione del buffer dei delta replicati e le soglie di push/pull sono esplicitate nel deployment, facilitando la taratura sperimentale.
+\end{itemize}
+
+Questa scelta \`e rilevante dal punto di vista metodologico: il deployment \`e parte integrante dell'esperimento distribuito, non un semplice dettaglio operativo. I file Compose fungono quindi sia da strumenti di esecuzione sia da descrizioni riproducibili degli scenari analizzati durante la validazione.
+
+\subsection{Verifica del corretto avvio}
+
+Dopo il deployment, la verifica pu\`o essere condotta a tre livelli:
+\begin{itemize}
+  \item livello infrastrutturale, controllando lo stato dei container con \texttt{docker compose ps};
+  \item livello applicativo, interrogando gli endpoint HTTP di uno o pi\`u nodi;
+  \item livello sistemico, eseguendo \texttt{python tests/integration/verify\_cluster.py} per confermare startup, raggiungibilit\`a e disponibilit\`a di base del cluster.
+\end{itemize}
+
+In questo modo il deployment non viene considerato completo solo quando i processi risultano attivi, ma quando il cluster esibisce effettivamente il comportamento distribuito atteso.
+
+\subsection{Continuous delivery dell'immagine Docker}
+
+Per semplificare il riuso del nodo al di fuori dell'ambiente di sviluppo locale, il repository include anche una pipeline di continuous delivery basata su GitHub Actions. A ogni push sul branch \texttt{main}, il workflow costruisce l'immagine del nodo a partire da \texttt{docker/Dockerfile.base} e la pubblica su GitHub Container Registry, mantenendo aggiornati i tag ``rolling'' come \texttt{latest} e \texttt{main}.
+
+La creazione di una GitHub Release avviene invece solo quando a un commit viene associato un tag di versione, ad esempio \texttt{v1.0.0}. In quel caso il workflow pubblica anche il tag versionato dell'immagine e genera una release dedicata, contenente il digest dell'artefatto e un file allegato con i comandi minimi per effettuare \texttt{pull} ed eseguire il container. Questo separa il flusso di integrazione continua dalla pubblicazione di versioni esplicite destinate alla distribuzione.
+
+Questa scelta migliora la tracciabilit\`a del deployment: il legame tra sorgente versionato, immagine costruita e istruzioni operative rimane esplicito, facilitando sia le dimostrazioni sia l'eventuale riproduzione di uno specifico stato del sistema distribuito.
 
 \clearpage
 
