@@ -18,6 +18,10 @@ jobs:
       - name: Checkout report repository
         uses: actions/checkout@v4
 
+      - name: Capture source commit title
+        run: |
+          echo "SOURCE_COMMIT_TITLE=$(git log -1 --pretty=%s)" >> "$GITHUB_ENV"
+
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
@@ -65,5 +69,5 @@ jobs:
             exit 0
           fi
 
-          git commit -m "chore(report): update generated final report PDF"
+          git commit -m "${SOURCE_COMMIT_TITLE:-chore(report): update generated final report PDF}"
           git push origin main
