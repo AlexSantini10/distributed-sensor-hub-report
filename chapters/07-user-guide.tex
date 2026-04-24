@@ -91,8 +91,9 @@ Il flusso operativo \`e il seguente:
   \item creare localmente il tag di versione e pubblicarlo sul repository remoto;
   \item aprire la sezione \emph{Releases} del repository;
   \item selezionare la release corrispondente al commit desiderato;
-  \item copiare il comando \texttt{docker pull} basato su digest riportato nella release o nel file allegato;
-  \item eseguire il container definendo almeno \texttt{NODE\_ID}, \texttt{HOST}, \texttt{PORT}, \texttt{WEB\_API\_PORT} e, se necessario, \texttt{BOOTSTRAP\_PEERS}.
+  \item scaricare gli asset allegati, in particolare il file \texttt{.env} di esempio e il \texttt{docker-compose} minimale;
+  \item adattare i parametri principali del file \texttt{.env};
+  \item avviare il container tramite Compose oppure usare direttamente il comando \texttt{docker run} riportato nelle note della release.
 \end{enumerate}
 
 Un esempio di pubblicazione della release \`e:
@@ -101,7 +102,13 @@ git tag v1.0.0
 git push origin v1.0.0
 \end{verbatim}
 
-Un esempio tipico di esecuzione \`e:
+Un esempio tipico di esecuzione tramite gli asset allegati \`e:
+\begin{verbatim}
+cp docker-node.env.example docker-node.env
+docker compose -f docker-compose.release.yml up -d
+\end{verbatim}
+
+In alternativa, resta disponibile anche l'avvio diretto con digest:
 \begin{verbatim}
 docker pull ghcr.io/<owner>/<repo>@sha256:<digest>
 docker run --rm -p 9000:9000 -p 10000:10000 \
