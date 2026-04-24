@@ -2,7 +2,8 @@
   "latex-workshop.latex.rootFile.useSubFile": false,
   "latex-workshop.latex.rootFile.doNotPrompt": true,
   "latex-workshop.latex.rootFile": "distributed-systems-final-report.tex",
-  "latex-workshop.latex.autoBuild.run": "onSave",
+  "latex-workshop.latex.autoBuild.run": "onFileChange",
+  "latex-workshop.latex.watch.usePolling": true,
   "latex-workshop.latex.tools": [
     {
       "name": "ruby-bibtex-prettifier",
@@ -49,6 +50,7 @@
       ]
     }
   ],
+  "latex-workshop.latex.recipe.default": "Report (CI-like)",
   "conventionalCommits.scopes": [
     "report"
   ]
