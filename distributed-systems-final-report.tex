@@ -47,54 +47,57 @@ During the development of the project and the preparation of this report, the au
 
 All outputs produced with the assistance of LLMs were critically reviewed, validated, and, when necessary, revised by the author. All architectural decisions, system design choices, and implementation details were defined and verified by the author, who takes full responsibility for the final content of this report.
 \\
+
 \section{Concept}\label{concept}
 
 \textbf{Product type.}
-The project implements a \emph{distributed peer-to-peer application} for sensor \emph{management and replication} in smart-city scenarios.
+The developed software is a distributed experimental platform composed of a set of autonomous peer-to-peer services and an optional web application for monitoring.
 Concretely, it combines:
 \begin{itemize}
-  \item a node runtime service (Python process) handling sensor ingestion, replication, membership, failure detection, and protocol logic;
-  \item inter-node TCP-based communication services (custom protocol);
-  \item an optional observability layer for real-time monitoring.
+  \item a set of autonomous peer-to-peer nodes responsible for sensor ingestion, local state management, membership handling, failure detection, and replicated state synchronization;
+  \item an optional read-only web/introspection layer for monitoring and runtime observability.
 \end{itemize}
 
-\textbf{Use case description.}
-The software manages a cluster of sensor nodes that ingest readings and disseminate updates to peers, so that each node converges toward a coherent global view (eventual consistency with deterministic LWW conflict resolution).
 
-In the current demo, sensor streams are simulated; however, the ingestion layer is designed so that real sensor sources can be added through dedicated adapters with no architectural changes to replication logic.
+\textbf{Use case description.}
+The software manages a cluster of sensor nodes that ingest local readings, replicate sensor state across peers, and expose runtime information for monitoring. The project is intentionally designed as a controlled distributed-systems laboratory rather than as a production-ready smart-city platform. This makes it possible to focus on decentralization, eventual consistency, membership evolution, failure detection, anti-entropy recovery, and observability under faults and network partitions.
+
+A typical execution proceeds as follows. First, a configurable number of nodes are started. Each node may host one or more local sensors and begins ingesting readings through a pluggable sensor interface. In the current demonstration setup, sensor streams are simulated for reproducibility, but the same interface can be extended to real devices through dedicated adapters. As readings are produced, nodes disseminate updates through push-pull gossip, exchange heartbeat evidence, propagate membership information, and synchronize their replicated state. Conflicts are resolved deterministically through a \emph{Last-Write-Wins} policy based on $(ts\_ms, origin)$, so replicas progressively converge after message delays, crashes, or temporary partitions.
 
 Typical users are smart-city monitoring stakeholders with two main human interaction profiles:
 \begin{itemize}
-  \item \emph{observational interaction} (control-room operators): inspect live sensor values and cluster status;
-  \item \emph{operational interaction} (technical operators): start/stop nodes, apply configuration changes, and run recovery or fault-handling procedures.
+  \item \emph{observational interaction} (control-room operators): inspect live sensor values, node health, and cluster evolution from monitoring workstations;
+  \item \emph{operational interaction} (technical operators/developers): deploy nodes, tune configuration parameters, and execute recovery or fault-handling procedures from development or administration machines.
 \end{itemize}
 
-Machine-to-machine interaction is \emph{continuous and periodic}: heartbeat exchange, gossip rounds, push-pull synchronization, and recovery synchronization after outages.
+Users are typically located wherever the system is operated or observed, such as development environments, control-room settings, or laboratory test setups. Interaction is usually periodic rather than continuous: operators interact with the system when deploying experiments, changing configuration, injecting faults, or checking recovery, while observers access the dashboard whenever live status inspection is needed. In addition, external tools may consume the exposed API to inspect, collect, or further process the data maintained by the system.
 
 Interaction channels and devices:
 \begin{itemize}
-  \item terminal/CLI for deployment and configuration;
-  \item monitoring clients and automated tests for system observability;
+  \item HTTP API for programmatic interaction, monitoring, and integration with external tools;
   \item desktop/laptop web browser for optional dashboard-based monitoring.
 \end{itemize}
 
 Data handling and roles:
 \begin{itemize}
-  \item nodes store replicated sensor records, membership/liveness metadata, topology snapshots, and introspection counters/events (node-local, runtime state);
-  \item optional log files provide operational traces;
-  \item main roles include: \emph{node process} (autonomous participant), \emph{cluster operator/developer}, and \emph{observer client} (UI/tests/tools).
+  \item the system does not store personal user data; it stores replicated sensor-state records, timestamps, origin identifiers, membership/liveness metadata, topology views, and introspection metrics/events as node-local runtime state;
+  \item optional log files provide operational traces for debugging and validation on the machines running the nodes;
+  \item main roles include: \emph{node process} (autonomous peer), \emph{cluster operator/developer}, and \emph{observer client} (dashboard, tests, or external tooling).
 \end{itemize}
 
 \textbf{Why distribution is needed.}
 Distribution is a core requirement, not an implementation detail:
 \begin{itemize}
-  \item \emph{fault tolerance and resilience}: no single coordinator; nodes can continue under crashes/restarts and temporary partitions;
-  \item \emph{eventual convergence at scale}: each node contributes updates and receives others through push/pull plus gossip dissemination;
-  \item \emph{resource and workload sharing}: sensing, merge, and communication work are spread across peers;
-  \item \emph{realistic decentralized environments}: smart-city infrastructures are geographically distributed by nature, so data is produced at the edge and synchronized across independent participants.
+  \item autonomous data collection at multiple nodes rather than at a central coordinator;
+  \item temporary divergence of local replicas before eventual convergence;
+  \item decentralized membership management and peer liveness assessment through heartbeat observation and phi-accrual failure detection;
+  \item resilience under crashes, restarts, and temporary network partitions through gossip dissemination and anti-entropy recovery;
+  \item realistic smart-city deployment assumptions, where sensing points are naturally distributed at the edge.
 \end{itemize}
 
-Overall, the project targets robust decentralized operation with observable, testable behavior under partial failures and dynamic cluster conditions.
+The system does not focus on long-term historical analytics or centralized query processing. It focuses on the information needed to study decentralized sensor-state replication: current sensor values, timestamps, origin identifiers, membership and liveness metadata, topology knowledge, and runtime observability data.
+
+\clearpage
 
 \section{Requirements Elicitation and Analysis}\label{requirements}
 
