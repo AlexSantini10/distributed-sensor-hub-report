@@ -1,51 +1,114 @@
 \section{Implementation}\label{implementation}
 
-Please report here all the implementation (technology-dependent) choices you made while implementing your design.
+This chapter reports the concrete technology-dependent choices used to realize the design discussed in \cref{design}. The implementation deliberately favors a lightweight and inspectable stack, so that the distributed behavior of the system remains visible and reproducible without relying on heavy external infrastructure.
 
-\begin{quote}
-  If you run out of time for this project, you may consider leaving some aspect unimplemented, 
-  and simply discuss how you would have implemented them.
-  %
-  In this case, better would be to discuss unimplemented features in \cref{future-works}.
-\end{quote}
+\subsection{Protocols and Data Representation}
+\label{implementation-protocols}
 
+Two communication protocols are used, each chosen according to the interaction style required by the system.
+
+\textbf{Node-to-node communication.}
+Peer communication is implemented over \textbf{TCP}. This choice was preferred over UDP because the project needs ordered and reliable delivery of protocol payloads at the transport level, while still keeping the communication stack simple and under direct control. TCP is therefore used for:
 \begin{itemize}
-  \item which \textbf{network protocols} to use?
-  %
-  \begin{itemize}
-    \item e.g.~UDP, TCP, HTTP, WebSockets, gRPC, XMPP, AMQP, MQTT, etc.
-  \end{itemize}
-  
-  \item how should \emph{in-transit data} be \textbf{represented}?
-  %
-  \begin{itemize}
-    \item e.g.~JSON, XML, YAML, Protocol Buffers, etc.
-  \end{itemize}
-  
-  \item how should \emph{databases} be \textbf{queried}?
-  %
-  \begin{itemize}
-    \item e.g.~SQL, NoSQL, etc.
-  \end{itemize}
-  
-  \item how should components be \emph{authenticated}?
-  %
-  \begin{itemize}
-    \item e.g.~OAuth, JWT, etc.
-  \end{itemize}
-
-  \item how should components be \emph{authorized}?
-  %
-  \begin{itemize}
-    \item e.g.~RBAC, ABAC, etc.
-  \end{itemize}
+  \item bootstrap and peer discovery traffic;
+  \item heartbeat exchange;
+  \item membership gossip dissemination;
+  \item sensor-state update propagation;
+  \item incremental and full synchronization during recovery.
 \end{itemize}
+
+Rather than adopting an external RPC or messaging framework, the project uses a custom lightweight application protocol on top of TCP. Payloads are transmitted as length-prefixed frames, which makes message boundaries explicit and keeps the implementation compatible with a persistent stream-oriented transport.
+
+\textbf{Observer communication.}
+Human users and external tools interact with the system through a \textbf{read-only HTTP API}. HTTP is appropriate here because the observability plane is request-response oriented, browser-friendly, and naturally suited to dashboards, integration scripts, and test harnesses. Since the observation API does not participate in peer coordination, it is intentionally separated from the internal peer-to-peer protocol.
+
+\textbf{In-transit representation.}
+Messages and HTTP responses are represented as \textbf{JSON}. This choice was motivated by readability, ease of debugging, and direct interoperability with browsers and Python tooling. JSON is sufficient for the project because payload sizes are moderate and the main goal is clarity rather than binary compactness. Message validation and dispatch are then handled at the protocol layer after decoding.
+
+The main message families implemented in the peer protocol are:
+\begin{itemize}
+  \item \texttt{JOIN\_REQUEST} and \texttt{PEER\_LIST} for discovery;
+  \item \texttt{PING} and \texttt{PONG} for heartbeat-based liveness observation;
+  \item \texttt{GOSSIP\_STATE} for disseminating membership knowledge;
+  \item \texttt{SENSOR\_UPDATE} for push-based sensor replication;
+  \item \texttt{GET\_DELTA} and \texttt{DELTA\_UNAVAILABLE} for incremental recovery;
+  \item \texttt{FULL\_SYNC\_REQUEST} and \texttt{FULL\_SYNC\_RESPONSE} for stronger catch-up after disruption.
+\end{itemize}
+
+\subsection{State Management and Storage Choices}
+\label{implementation-storage}
+
+The implementation does \textbf{not} use an external database. All relevant information is maintained as in-memory runtime state inside each node:
+\begin{itemize}
+  \item the current winning sensor records;
+  \item replication deltas and sequence metadata;
+  \item the peer membership table;
+  \item liveness-related information;
+  \item topology snapshots;
+  \item introspection events and counters.
+\end{itemize}
+
+This is consistent with the project scope: the goal is to study replication, convergence, recovery, and observability of current distributed state, not durable long-term business storage. As a consequence, no SQL or NoSQL query layer is required. Queries are replaced by direct access to in-memory state providers, which are then exposed through the HTTP observation endpoints.
+
+From an implementation viewpoint, the most important storage choice is therefore not the selection of a database technology, but the decision to encode merge semantics explicitly in the application logic. Sensor-state convergence is implemented with deterministic Last-Writer-Wins conflict resolution based on timestamp and origin metadata, while membership and liveness views are maintained through dedicated in-memory structures updated by protocol handlers and periodic runtimes.
+
+\subsection{Authentication and Authorization}
+\label{implementation-auth}
+
+No explicit authentication or authorization protocol is implemented in the current version of the system. This is a deliberate scope decision, not an omission by accident. The project runs in controlled development and laboratory environments, and the report prioritizes decentralization, consistency, failure handling, and observability over access-control concerns.
+
+Accordingly:
+\begin{itemize}
+  \item peer-to-peer channels do not currently require node authentication;
+  \item the HTTP API does not require login, tokens, or session management;
+  \item the system does not implement role-based or attribute-based authorization.
+\end{itemize}
+
+The practical effect is that any process able to reach a node in the current deployment can interact with the exposed interface allowed by that channel. This is acceptable for the project scope, but it also marks a clear limitation of the current implementation. Stronger authentication, endpoint protection, and transport hardening are left as future work rather than embedded in the present runtime.
 
 \subsection{Technological details}\label{technological-details}
 
+\textbf{Programming language and runtime.}
+The project is implemented in \textbf{Python}. This choice supports rapid experimentation, readable code, and low setup cost for a course project. The implementation makes extensive use of the Python standard library for networking, concurrency, HTTP serving, serialization, logging, and timing, which keeps external dependencies intentionally minimal.
+
+\textbf{Concurrency model.}
+The runtime is based on \textbf{threads}, background worker loops, and in-memory queues. This model is used for several long-lived activities that must proceed concurrently:
 \begin{itemize}
-  \item any particular \emph{framework} / \emph{technology} being exploited goes here
+  \item accepting inbound TCP connections;
+  \item maintaining outbound peer workers;
+  \item periodic heartbeat and failure-detector evaluation;
+  \item periodic push-pull replication;
+  \item sensor generation;
+  \item HTTP serving for observation.
 \end{itemize}
 
-\clearpage
+This approach was preferred to a more complex actor framework or asynchronous event-loop architecture because it keeps the execution model explicit and understandable, which is desirable for an educational distributed-systems project.
 
+\textbf{Configuration management.}
+Node configuration is externalized through \textbf{environment variables}. Parameters such as node identity, ports, bootstrap peers, sensor definitions, replication cadence, failure-detector thresholds, and fault-injection options are all configurable from the environment. This makes it easy to instantiate different topologies and experimental scenarios without changing source code.
+
+\textbf{Sensor implementation.}
+Sensor sources are implemented as pluggable local producers. The repository includes multiple simulated sensor types, such as numeric, boolean, wave, noise, spike, trend, categorical, incremental, and finite test sensors. This confirms the extensibility objective identified in NFR6 while keeping the whole platform reproducible in the absence of real hardware devices.
+
+\textbf{Networking layer.}
+The transport layer is implemented with Python sockets and a custom framed TCP protocol. On the outbound side, each peer connection has its own worker and FIFO send queue; on the inbound side, a threaded TCP server accepts connections, reads framed messages, validates them, and dispatches them to protocol handlers. The implementation also includes bounded worker counts and configurable socket limits, which helps prevent unbounded resource growth in larger experiments.
+
+\textbf{HTTP observation layer.}
+The Web API is implemented with Python's `http.server` facilities, in particular a threaded HTTP server and custom request handlers. This is sufficient because the API is read-only and relatively small, so introducing a larger web framework would not provide proportionate benefits for the project scope.
+
+\textbf{Containerization and deployment automation.}
+The project uses \textbf{Docker} and \textbf{Docker Compose} to instantiate reproducible node topologies. Multiple compose configurations are provided, including small and medium cluster layouts, so that the same codebase can be exercised under different scales and fault scenarios. Containerization strongly supports NFR5 because it reduces environmental variability across test runs and demonstrations.
+
+\textbf{Testing and quality tools.}
+Validation and development are supported by:
+\begin{itemize}
+  \item \textbf{pytest} for unit and integration testing;
+  \item Docker-backed integration harnesses for multi-node and fault-recovery scenarios;
+  \item \textbf{pyright} for static type checking;
+  \item structured logging and introspection endpoints for runtime diagnosis.
+\end{itemize}
+
+\textbf{Dependencies.}
+External dependencies are intentionally few. Besides development tools, the main runtime dependency is `python-dotenv`, used to simplify environment-based configuration. This minimal dependency footprint is coherent with the project's emphasis on portability, inspectability, and self-contained deployment.
+
+\clearpage
