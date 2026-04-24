@@ -1,5 +1,7 @@
 # Distributed Systems Final Report
 
+Main repository: [distributed-sensor-hub](https://github.com/AlexSantini10/distributed-sensor-hub)
+
 ## latex suggestions
 Short notes from the professor template, kept here for future reuse:
 
