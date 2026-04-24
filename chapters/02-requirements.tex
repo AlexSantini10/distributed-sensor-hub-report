@@ -1,0 +1,197 @@
+\section{Requirements Elicitation and Analysis}\label{requirements}
+
+Requirements were elicited from the intended project goal described in \cref{concept}: build a decentralized laboratory platform for distributed sensor ingestion, replicated state propagation, fault observation, and monitoring. The elicitation process therefore focused on the observable services the platform must provide to operators and observers, on the quality attributes expected from a distributed-system prototype, and on the practical constraints imposed by course evaluation and reproducible experimentation.
+
+\subsection{Glossary}
+\label{requirements-glossary}
+
+\begin{itemize}
+  \item \textbf{Node}: autonomous peer process participating in the cluster and executing the full runtime stack.
+  \item \textbf{Peer}: another node known by a node through bootstrap, heartbeat exchange, or gossip dissemination.
+  \item \textbf{Sensor reading}: atomic observation produced by a local sensor source, including sensor identifier, value, timestamp, and origin.
+  \item \textbf{Replicated sensor state}: node-local view of the cluster-wide latest known sensor values after merge.
+  \item \textbf{Membership view}: node-local knowledge about known peers and their liveness status.
+  \item \textbf{Observer}: human user or external tool consuming read-only monitoring data.
+  \item \textbf{Operator}: human user responsible for starting nodes, configuring experiments, and injecting or observing failures.
+  \item \textbf{Convergence}: condition in which reachable replicas expose the same winning sensor values after enough communication.
+  \item \textbf{Partition}: temporary communication disruption that prevents some nodes from exchanging messages with the rest of the cluster.
+\end{itemize}
+
+\subsection{Functional Requirements}
+\label{functional-requirements}
+
+\textbf{FR1 -- Multi-node autonomous operation.}
+The system shall allow multiple nodes to start independently and participate in the same distributed deployment without requiring a central coordinator.
+
+\textbf{Acceptance criterion.}
+When a cluster of at least two configured nodes is started, each node becomes operational as an autonomous process and exposes its local service interfaces without depending on a single master node.
+
+\medskip
+\textbf{FR2 -- Local sensor ingestion.}
+Each node shall be able to host one or more local sensor sources and ingest their readings into the distributed system state.
+
+\textbf{Acceptance criterion.}
+Given at least one configured sensor on a node, the node eventually exposes fresh sensor records associated with its own origin through the read API or introspection API.
+
+\medskip
+\textbf{FR3 -- Cluster-wide sensor-state dissemination.}
+The system shall propagate sensor updates among nodes so that readings produced on one node become visible on other reachable nodes.
+
+\textbf{Acceptance criterion.}
+If a node generates new sensor readings while communication paths to other nodes are available, those readings eventually appear in the replicated sensor-state view exposed by the other reachable nodes.
+
+\medskip
+\textbf{FR4 -- Deterministic conflict resolution.}
+The system shall resolve concurrent or conflicting updates in a deterministic way so that replicas can converge to the same winning value for each sensor record.
+
+\textbf{Acceptance criterion.}
+When two or more updates compete for the same logical sensor record, all nodes that receive the same set of updates eventually expose the same winner for that record.
+
+\medskip
+\textbf{FR5 -- Membership discovery and peer knowledge propagation.}
+The system shall allow nodes to discover peers and maintain a distributed view of cluster membership.
+
+\textbf{Acceptance criterion.}
+After startup and sufficient message exchange, a node exposes a membership view containing the peers it has discovered directly or indirectly.
+
+\medskip
+\textbf{FR6 -- Liveness observation.}
+The system shall provide operators with a node-local assessment of peer liveness so that missing or degraded peers can be observed during experiments.
+
+\textbf{Acceptance criterion.}
+If a known peer becomes unreachable for long enough, at least one observing node eventually reports a degraded or failed status for that peer in its membership/introspection output.
+
+\medskip
+\textbf{FR7 -- Recovery after crashes or temporary disconnections.}
+The system shall allow a node that restarts or reconnects after temporary unavailability to recover the replicated state needed to rejoin normal operation.
+
+\textbf{Acceptance criterion.}
+After a node crash or temporary isolation, once communication is restored the recovering node eventually exposes a replicated state aligned with the rest of the reachable cluster.
+
+\medskip
+\textbf{FR8 -- Read-only observability interface.}
+The system shall provide a read-only programmatic interface for observing sensor state, membership, topology-related information, events, and operational metrics.
+
+\textbf{Acceptance criterion.}
+A client can query documented HTTP endpoints and obtain structured snapshots of the node's current distributed-system view without modifying runtime state.
+
+\medskip
+\textbf{FR9 -- Human-oriented monitoring support.}
+The system shall support human observation of the running cluster through a dashboard or equivalent visual monitoring interface.
+
+\textbf{Acceptance criterion.}
+An observer can inspect live cluster information from a web browser by connecting to the exposed read-only API of a node.
+
+\subsection{Non-Functional Requirements}
+\label{non-functional-requirements}
+
+\textbf{NFR1 -- Decentralization.}
+Normal operation shall not depend on any central coordinator or single control component.
+
+\textbf{Acceptance criterion.}
+The system continues to ingest local readings, maintain local state, and serve read-only observability data on surviving nodes even if one arbitrary peer becomes unavailable.
+
+\medskip
+\textbf{NFR2 -- Eventual consistency.}
+The replicated sensor state shall provide eventual, not immediate, consistency across nodes.
+
+\textbf{Acceptance criterion.}
+In the absence of new conflicting updates and after communication is restored, reachable replicas converge to the same winning values for the same sensor records.
+
+\medskip
+\textbf{NFR3 -- Partition tolerance with degraded semantics.}
+The system shall remain available for local operation during temporary network partitions, accepting that different partitions may temporarily diverge.
+
+\textbf{Acceptance criterion.}
+During a partition, nodes in each connected component continue local ingestion and observation; after the partition heals, their replicas eventually converge again.
+
+\medskip
+\textbf{NFR4 -- Fault observability.}
+The system shall make failures and recovery visible enough to support distributed-systems experimentation and debugging.
+
+\textbf{Acceptance criterion.}
+Operators can inspect status changes, replication activity, and recovery evidence through exposed membership, event, or metric views.
+
+\medskip
+\textbf{NFR5 -- Reproducibility of experiments.}
+The platform shall support repeatable validation scenarios on development machines and course evaluation environments.
+
+\textbf{Acceptance criterion.}
+Using the documented setup, an operator can start a predefined topology and reproduce representative convergence and recovery experiments without relying on external managed services.
+
+\medskip
+\textbf{NFR6 -- Extensibility of sensor sources.}
+The system shall be open to additional sensor types without changing the conceptual role of the rest of the distributed runtime.
+
+\textbf{Acceptance criterion.}
+New sensor sources can be introduced as additional producers while preserving the same downstream ingestion, replication, and observation capabilities.
+
+\medskip
+\textbf{NFR7 -- Operational scalability at course-project scale.}
+The platform shall support small and medium experimental clusters rather than only a fixed two-node demo.
+
+\textbf{Acceptance criterion.}
+The documented deployment can be instantiated with multiple nodes and still provides replicated state and observability functions for the whole experiment.
+
+\subsection{Implementation Constraints}
+\label{implementation-constraints}
+
+\textbf{IR1 -- Self-contained deployment.}
+The project shall be executable in a self-contained way on commodity machines used for development and evaluation, without requiring paid or institution-managed cloud infrastructure.
+
+\textbf{Justification.}
+This constraint follows from course-project reproducibility and portability requirements.
+
+\textbf{Acceptance criterion.}
+The system can be started locally with the provided repository artifacts and documented dependencies.
+
+\medskip
+\textbf{IR2 -- Reproducible multi-node setup.}
+The project shall provide a reproducible way to instantiate representative multi-node deployments for demonstrations and validation.
+
+\textbf{Justification.}
+The report and validation activities require repeatable distributed scenarios, including fault-injection experiments.
+
+\textbf{Acceptance criterion.}
+An operator can launch a predefined topology from the repository and repeat the same experiment configuration with consistent system roles and interfaces.
+
+\subsection{Relevant Distributed System Features}
+\label{ds-features}
+
+Not all classical distributed-system features have the same priority in this project. Since \textit{Distributed Sensor Hub} is a decentralized monitoring and experimentation platform, some features are central design drivers, while others are intentionally secondary.
+
+\textbf{Transparency.}
+Only partially relevant. The system hides low-level transport details from observers, but it does \emph{not} aim to hide the fact that it is distributed. On the contrary, replication lag, topology evolution, liveness suspicion, and recovery dynamics are part of what the project wants to make observable. Failure transparency is therefore limited by design.
+
+\medskip
+\textbf{Fault tolerance and dependability.}
+Highly relevant. Nodes may crash, restart, or become temporarily disconnected, and the platform is expected to continue operating on surviving nodes while later recovering convergence. Availability and recoverability are more important than uninterrupted global consistency. Integrity is also relevant in the sense that replicas must converge deterministically rather than drift indefinitely.
+
+\medskip
+\textbf{Scalability.}
+Relevant, but at moderate scale. The project is not meant for Internet-scale deployments; however, it must scale beyond a trivial two-node example and remain meaningful on multi-node laboratory topologies. The main concern is preserving understandable behavior as the number of peers and sensor updates grows.
+
+\medskip
+\textbf{Security and trust.}
+Only marginally relevant in the current scope. The platform does not manage personal data or adversarial multi-tenant access, and the main users are trusted operators and observers in controlled environments. Security hardening is therefore not a primary project driver, although it remains a possible future extension.
+
+\medskip
+\textbf{Resource sharing.}
+Relevant. Nodes share distributed knowledge rather than centralized hardware resources: replicated sensor winners, membership evidence, topology views, and operational metadata. Coordination is required to keep those shared views convergent despite asynchrony and failures.
+
+\medskip
+\textbf{Openness, interoperability, and heterogeneity.}
+Relevant. The project benefits from clean interfaces between sensor producers, node runtime, and observation clients. This matters because simulated sensors are only one current source of data, while the same ingestion boundary can later support heterogeneous adapters and external tools.
+
+\medskip
+\textbf{Evolvability and maintainability.}
+Highly relevant. As a course project intended to demonstrate multiple distributed-systems concerns, the platform must remain understandable, modular, and extensible, especially for adding new sensors, observability surfaces, and validation scenarios.
+
+\medskip
+\textbf{Performance, concurrency, and communication efficiency.}
+Relevant, but not under hard real-time constraints. The system executes many concurrent activities such as sensor production, replication, heartbeats, gossip exchange, and HTTP observation. Efficiency matters because excessive communication can obscure convergence behavior, but the project does not target strict latency guarantees.
+
+\medskip
+\textbf{Economy and costs.}
+Relevant mainly as a practical constraint. The project should run on ordinary development hardware and avoid external infrastructure dependencies, which supports reproducibility, portability, and low evaluation cost.
+

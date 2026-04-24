@@ -48,5 +48,8 @@
         "cleanup-latex-artifacts"
       ]
     }
+  ],
+  "conventionalCommits.scopes": [
+    "report"
   ]
 }
