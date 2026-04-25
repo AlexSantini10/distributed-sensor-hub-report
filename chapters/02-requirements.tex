@@ -35,14 +35,14 @@ Given at least one configured sensor on a node, the node eventually exposes fres
 
 \medskip
 \textbf{FR3 -- Cluster-wide sensor-state dissemination.}
-The system shall propagate sensor updates among nodes so that readings produced on one node become visible on other reachable nodes.
+The system shall propagate sensor updates among nodes through a decentralized gossip mechanism so that readings produced on one node become visible on other reachable nodes.
 
 \textbf{Acceptance criterion.}
 If a node generates new sensor readings while communication paths to other nodes are available, those readings eventually appear in the replicated sensor-state view exposed by the other reachable nodes.
 
 \medskip
-\textbf{FR4 -- Deterministic conflict resolution.}
-The system shall resolve concurrent or conflicting updates in a deterministic way so that replicas can converge to the same winning value for each sensor record.
+\textbf{FR4 -- Deterministic timestamp-based conflict resolution.}
+The system shall resolve concurrent or conflicting updates using a deterministic timestamp-based merge policy (Last-Write-Wins with deterministic tie-breaking) so that replicas can converge to the same winning value for each sensor record.
 
 \textbf{Acceptance criterion.}
 When two or more updates compete for the same logical sensor record, all nodes that receive the same set of updates eventually expose the same winner for that record.
@@ -55,15 +55,15 @@ The system shall allow nodes to discover peers and maintain a distributed view o
 After startup and sufficient message exchange, a node exposes a membership view containing the peers it has discovered directly or indirectly.
 
 \medskip
-\textbf{FR6 -- Liveness observation.}
-The system shall provide operators with a node-local assessment of peer liveness so that missing or degraded peers can be observed during experiments.
+\textbf{FR6 -- Adaptive liveness observation.}
+The system shall provide operators with a node-local assessment of peer liveness based on heartbeat behavior and an adaptive failure detector so that missing or degraded peers can be observed during experiments.
 
 \textbf{Acceptance criterion.}
 If a known peer becomes unreachable for long enough, at least one observing node eventually reports a degraded or failed status for that peer in its membership/introspection output.
 
 \medskip
 \textbf{FR7 -- Recovery after crashes or temporary disconnections.}
-The system shall allow a node that restarts or reconnects after temporary unavailability to recover the replicated state needed to rejoin normal operation.
+The system shall allow a node that restarts or reconnects after temporary unavailability to recover the replicated state needed to rejoin normal operation, including full-state synchronization when incremental information is insufficient.
 
 \textbf{Acceptance criterion.}
 After a node crash or temporary isolation, once communication is restored the recovering node eventually exposes a replicated state aligned with the rest of the reachable cluster.
@@ -81,6 +81,41 @@ The system shall support human observation of the running cluster through a dash
 
 \textbf{Acceptance criterion.}
 An observer can inspect live cluster information from a web browser by connecting to the exposed read-only API of a node.
+
+\medskip
+\textbf{FR10 -- Push-pull anti-entropy exchange.}
+The replication layer shall support push-pull anti-entropy exchanges between peers so that each side can both advertise local updates and request missing information.
+
+\textbf{Acceptance criterion.}
+During normal operation, pairs of reachable peers periodically exchange synchronization messages in both directions, and each node can obtain updates it does not yet store.
+
+\medskip
+\textbf{FR11 -- Phi Accrual failure suspicion output.}
+The membership subsystem shall expose failure suspicion derived from a Phi Accrual Failure Detector, allowing operators to distinguish healthy, suspect, and recovering peers.
+
+\textbf{Acceptance criterion.}
+If heartbeat arrival patterns from a peer degrade or stop, phi-based suspicion eventually crosses a configured threshold and the peer is reported as suspect/faulty in membership/introspection output.
+
+\medskip
+\textbf{FR12 -- Full-state rejoin synchronization.}
+When a node rejoins after crash, restart, or long partition, it shall support full-state synchronization from reachable peers to rebuild a coherent replica before resuming steady-state convergence.
+
+\textbf{Acceptance criterion.}
+After prolonged unavailability, a rejoining node can request and apply a full sensor-state snapshot and eventually align with the reachable cluster state.
+
+\medskip
+\textbf{FR13 -- Reproducible multi-node orchestration.}
+The project shall provide an executable multi-node deployment configuration for experiments and demonstrations (e.g., Docker Compose topology with multiple peers).
+
+\textbf{Acceptance criterion.}
+Using repository-provided orchestration artifacts, an operator can start a predefined multi-node topology and observe ingestion, replication, failure suspicion, and recovery behavior.
+
+\medskip
+\textbf{FR14 -- Comparative technology discussion artifact.}
+Project documentation shall include a comparative discussion against common distributed messaging/streaming frameworks (e.g., MQTT, ZeroMQ, Kafka, Redis Streams), with explicit trade-offs.
+
+\textbf{Acceptance criterion.}
+The final report contains a section that contrasts the implemented peer-to-peer design with the selected frameworks along consistency, scalability, and fault-tolerance dimensions.
 
 \subsection{Non-Functional Requirements}
 \label{non-functional-requirements}
@@ -196,4 +231,3 @@ Relevant, but not under hard real-time constraints. The system executes many con
 Relevant mainly as a practical constraint. The project should run on ordinary development hardware and avoid external infrastructure dependencies, which supports reproducibility, portability, and low evaluation cost.
 
 \clearpage
-
