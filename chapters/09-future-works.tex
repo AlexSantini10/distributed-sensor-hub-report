@@ -1,65 +1,65 @@
 \section{Future works}\label{future-works}
 
-Sebbene il progetto raggiunga gli obiettivi didattici prefissati in termini di replica distribuita, convergenza eventuale e osservabilit\`a, l'architettura realizzata lascia spazio a diverse estensioni significative, sia dal punto di vista ingegneristico sia da quello sperimentale.
+Although the project achieves its educational objectives in terms of distributed replication, eventual convergence, and observability, the implemented architecture leaves room for several significant extensions, both from an engineering and an experimental perspective.
 
-\subsection{Sicurezza e hardening operativo}
+\subsection{Security and operational hardening}
 
-La prima area di evoluzione riguarda la sicurezza. Nella versione attuale il sistema opera in un contesto controllato e non implementa autenticazione dei peer, protezione dell'API HTTP n\'e cifratura dei canali. Un'evoluzione naturale consisterebbe nell'introdurre:
+The first area for evolution concerns security. In the current version, the system operates in a controlled context and does not implement peer authentication, HTTP API protection, or channel encryption. A natural evolution would be to introduce:
 \begin{itemize}
-  \item autenticazione reciproca tra nodi;
-  \item protezione degli endpoint HTTP mediante token o mTLS;
-  \item validazione pi\`u stringente dell'identit\`a logica del mittente rispetto al canale di trasporto;
-  \item policy di autorizzazione per distinguere ruoli osservativi e amministrativi.
+  \item mutual authentication among nodes;
+  \item protection of HTTP endpoints through tokens or mTLS;
+  \item stricter validation of the sender's logical identity with respect to the transport channel;
+  \item authorization policies to distinguish observational and administrative roles.
 \end{itemize}
 
-Queste modifiche renderebbero il sistema pi\`u vicino a uno scenario reale, nel quale la tolleranza ai guasti deve convivere con requisiti minimi di trust e protezione del piano di controllo.
+These changes would bring the system closer to a real-world scenario, where fault tolerance must coexist with baseline trust requirements and control-plane protection.
 
-\subsection{Persistenza e storico dei dati}
+\subsection{Persistence and historical data}
 
-Attualmente i nodi mantengono soltanto stato volatile in memoria. Questa scelta \`e coerente con il focus del progetto, ma limita la capacit\`a del sistema di sopravvivere a riavvii estesi o di offrire analisi temporali di lungo periodo. Un'estensione rilevante sarebbe quindi l'introduzione di:
+At present, nodes retain only in-memory volatile state. This choice is consistent with the project's focus, but limits the system's ability to survive extended restarts or provide long-term temporal analysis. A relevant extension would therefore be the introduction of:
 \begin{itemize}
-  \item persistenza locale dei record sensore e dei delta recenti;
-  \item snapshot periodiche del metadata di membership e topology;
-  \item meccanismi di restore all'avvio per ridurre il costo di bootstrap;
-  \item archiviazione storica separata per analisi offline e confronto tra run sperimentali.
+  \item local persistence of sensor records and recent deltas;
+  \item periodic snapshots of membership and topology metadata;
+  \item startup restore mechanisms to reduce bootstrap cost;
+  \item separate historical archiving for offline analysis and comparison across experimental runs.
 \end{itemize}
 
-Questa evoluzione aprirebbe anche la possibilit\`a di confrontare in modo pi\`u rigoroso comportamento \emph{cold start}, tempi di recovery e perdita temporanea di informazione dopo crash estesi.
+This evolution would also enable more rigorous comparisons of \emph{cold-start} behavior, recovery times, and temporary information loss after extended crashes.
 
-\subsection{Semantiche di replica pi\`u ricche}
+\subsection{Richer replication semantics}
 
-Il criterio Last-Writer-Wins adottato \`e semplice, deterministico e adatto al contesto del progetto, ma costituisce anche una semplificazione. In prospettiva sarebbe interessante valutare:
+The adopted Last-Writer-Wins criterion is simple, deterministic, and suitable for the project context, but it is also a simplification. Looking ahead, it would be interesting to evaluate:
 \begin{itemize}
-  \item l'uso di CRDT specifici per particolari tipi di dato;
-  \item merge policies differenziate per categoria di sensore;
-  \item version vector o metadata causali per distinguere meglio concorrenza reale e semplice arrivo tardivo;
-  \item strategie adattive tra replica incrementale e full sync in funzione del grado di divergenza osservato.
+  \item the use of data-type-specific CRDTs;
+  \item differentiated merge policies by sensor category;
+  \item version vectors or causal metadata to better distinguish true concurrency from simple delayed arrival;
+  \item adaptive strategies between incremental replication and full sync based on observed divergence.
 \end{itemize}
 
-Queste estensioni consentirebbero di studiare in modo pi\`u approfondito il compromesso fra semplicit\`a implementativa, quantit\`a di metadata scambiati e qualit\`a semantica della convergenza.
+These extensions would enable deeper study of the trade-off between implementation simplicity, amount of exchanged metadata, and semantic quality of convergence.
 
-\subsection{Sperimentazione su topologie pi\`u ampie}
+\subsection{Experiments on larger topologies}
 
-Un'altra direzione naturale riguarda l'ampliamento della scala sperimentale. Le topologie attuali permettono gi\`a di osservare fenomeni interessanti, ma un'estensione a cluster pi\`u grandi o con connettivit\`a pi\`u eterogenea renderebbe possibile:
+Another natural direction concerns extending experimental scale. Current topologies already allow observation of interesting phenomena, but extending to larger clusters or more heterogeneous connectivity would make it possible to:
 \begin{itemize}
-  \item valutare l'impatto della densit\`a della topologia sul traffico di gossip;
-  \item studiare la sensibilit\`a del failure detector in reti meno regolari;
-  \item confrontare fan-out, intervalli di sync e dimensione dei delta buffer su carichi superiori;
-  \item verificare la leggibilit\`a e la sostenibilit\`a dell'osservabilit\`a al crescere del numero di nodi.
+  \item evaluate the impact of topology density on gossip traffic;
+  \item study failure-detector sensitivity in less regular networks;
+  \item compare fan-out, sync intervals, and delta-buffer sizes under higher loads;
+  \item verify readability and sustainability of observability as node count grows.
 \end{itemize}
 
-Da un punto di vista sperimentale, sarebbe inoltre utile affiancare metriche quantitative sistematiche su latenze di convergenza, volume di traffico e costi di recovery.
+From an experimental standpoint, it would also be useful to complement this with systematic quantitative metrics on convergence latency, traffic volume, and recovery costs.
 
-\subsection{Osservabilit\`a avanzata e strumenti di analisi}
+\subsection{Advanced observability and analysis tooling}
 
-Il progetto dispone gi\`a di una buona base di introspection read-only, ma essa potrebbe essere ulteriormente estesa tramite:
+The project already provides a solid read-only introspection baseline, but it could be further extended through:
 \begin{itemize}
-  \item esportazione di metriche verso stack standard di monitoring;
-  \item alerting automatico su soglie critiche di stale data o \texttt{DELTA\_UNAVAILABLE};
-  \item tracciamento temporale persistente degli eventi di control plane;
-  \item comparazione automatizzata tra differenti configurazioni di replica e failure detection.
+  \item export of metrics to standard monitoring stacks;
+  \item automatic alerting on critical stale-data or \texttt{DELTA\_UNAVAILABLE} thresholds;
+  \item persistent temporal tracing of control-plane events;
+  \item automated comparison across different replication and failure-detection configurations.
 \end{itemize}
 
-In questo modo il sistema diventerebbe non solo un prototipo funzionale, ma anche una piattaforma sperimentale pi\`u matura per analizzare in maniera sistematica le conseguenze delle scelte architetturali.
+In this way, the system would become not only a functional prototype, but also a more mature experimental platform for systematically analyzing the consequences of architectural choices.
 
 \clearpage

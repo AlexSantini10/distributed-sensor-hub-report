@@ -1,114 +1,114 @@
 \section{User Guide}\label{user-guide}
 
-Questa sezione descrive l'uso operativo del sistema dal punto di vista dell'utente tecnico che desidera avviare il cluster, osservare la convergenza dello stato e consultare le superfici di introspection. Poich\'e il progetto non espone funzionalit\`a di scrittura verso l'esterno, l'interazione principale consiste nell'avviare i nodi, attendere l'evoluzione del sistema distribuito e analizzarne il comportamento mediante API HTTP e dashboard Web.
+This section describes operational system usage from the perspective of a technical user who wants to start the cluster, observe state convergence, and inspect introspection surfaces. Since the project does not expose external write capabilities, the main interaction consists of starting nodes, waiting for distributed-system evolution, and analyzing behavior through HTTP APIs and the web dashboard.
 
-\subsection{Avvio del sistema}
+\subsection{System startup}
 
-L'utilizzo pi\`u efficace per la dimostrazione consiste nell'avviare una topologia Docker gi\`a predisposta. Lo scenario consigliato \`e quello a sei nodi:
+The most effective setup for demonstration is to start an already prepared Docker topology. The recommended scenario is the six-node one:
 \begin{verbatim}
 docker compose -f docker/docker-compose-6-nodes.yml up --build -d
 \end{verbatim}
 
-Dopo l'avvio \`e opportuno attendere alcuni secondi affinch\'e i nodi completino bootstrap, scambio della peer list, primi heartbeat e prime repliche di stato. L'effetto atteso \`e la progressiva comparsa di una vista condivisa della membership e di record sensore replicati fra i nodi.
+After startup, it is advisable to wait a few seconds so that nodes can complete bootstrap, peer-list exchange, initial heartbeats, and initial state replication. The expected effect is the progressive appearance of a shared membership view and sensor records replicated across nodes.
 
-Per arrestare il cluster:
+To stop the cluster:
 \begin{verbatim}
 docker compose -f docker/docker-compose-6-nodes.yml down
 \end{verbatim}
 
-\subsection{Consultazione diretta delle API}
+\subsection{Direct API inspection}
 
-Ogni nodo espone una Web API read-only sulla porta definita da \texttt{WEB\_API\_PORT}. Gli endpoint pi\`u utili durante l'uso sono:
+Each node exposes a read-only web API on the port defined by \texttt{WEB\_API\_PORT}. The most useful endpoints during operation are:
 \begin{itemize}
-  \item \texttt{/api/state}: snapshot dello stato sensori replicato;
-  \item \texttt{/api/updates}: stream o vista degli aggiornamenti recenti;
-  \item \texttt{/api/membership}: vista locale della membership;
-  \item \texttt{/api/topology}: rappresentazione della topologia conosciuta;
-  \item \texttt{/api/introspection}: snapshot aggregato secondo il contratto \texttt{introspection/v1};
-  \item \texttt{/api/introspection/events}: eventi recenti di control plane;
-  \item \texttt{/api/introspection/metrics}: contatori e indicatori relativi alla replica.
+  \item \texttt{/api/state}: snapshot of replicated sensor state;
+  \item \texttt{/api/updates}: stream or view of recent updates;
+  \item \texttt{/api/membership}: local membership view;
+  \item \texttt{/api/topology}: representation of known topology;
+  \item \texttt{/api/introspection}: aggregated snapshot according to the \texttt{introspection/v1} contract;
+  \item \texttt{/api/introspection/events}: recent control-plane events;
+  \item \texttt{/api/introspection/metrics}: counters and indicators related to replication.
 \end{itemize}
 
-Ad esempio, in una topologia base, il nodo \texttt{node-1} \`e normalmente raggiungibile su \texttt{http://localhost:10000}. Interrogando l'endpoint aggregato \texttt{/api/introspection} si ottiene una vista utile a verificare:
+For example, in a base topology, \texttt{node-1} is normally reachable at \texttt{http://localhost:10000}. Querying the aggregated \texttt{/api/introspection} endpoint provides a useful view to verify:
 \begin{itemize}
-  \item quali peer sono attualmente considerati \texttt{alive}, \texttt{suspected} o \texttt{dead};
-  \item quali record sensore sono noti al nodo interrogato;
-  \item quanti round di replica e messaggi di gossip sono stati osservati;
-  \item se il buffer dei delta \`e sufficiente oppure produce \texttt{DELTA\_UNAVAILABLE}.
+  \item which peers are currently considered \texttt{alive}, \texttt{suspected}, or \texttt{dead};
+  \item which sensor records are known to the queried node;
+  \item how many replication rounds and gossip messages have been observed;
+  \item whether the delta buffer is sufficient or produces \texttt{DELTA\_UNAVAILABLE}.
 \end{itemize}
 
-\subsection{Uso della dashboard Web}
+\subsection{Using the web dashboard}
 
-Per un'osservazione pi\`u comoda \`e disponibile una dashboard statica nella directory \texttt{web/}. Essa non richiede backend aggiuntivi e consuma esclusivamente l'endpoint \texttt{/api/introspection}. Per avviarla:
+For more convenient observation, a static dashboard is available in the \texttt{web/} directory. It requires no additional backend and consumes only the \texttt{/api/introspection} endpoint. To start it:
 \begin{verbatim}
 cd web
 python -m http.server 8080
 \end{verbatim}
 
-Successivamente \`e sufficiente aprire nel browser l'indirizzo \texttt{http://localhost:8080} e impostare come \emph{API Base URL} l'endpoint HTTP di uno dei nodi, ad esempio \texttt{http://localhost:10000}.
+Then open \texttt{http://localhost:8080} in the browser and set the \emph{API Base URL} to the HTTP endpoint of one node, for example \texttt{http://localhost:10000}.
 
-La dashboard rende disponibili le principali viste di analisi:
+The dashboard provides the main analysis views:
 \begin{itemize}
-  \item grafo della topologia osservata;
-  \item stato dei peer e relativa semantica di liveness;
-  \item tabella dei sensori replicati con origine e timestamp;
-  \item timeline degli eventi recenti;
-  \item striscia di metriche sintetiche per gossip, full sync e delta replication.
+  \item graph of observed topology;
+  \item peer status and related liveness semantics;
+  \item table of replicated sensors with source and timestamp;
+  \item timeline of recent events;
+  \item synthetic metrics strip for gossip, full sync, and delta replication.
 \end{itemize}
 
-L'esito atteso, in un cluster stabile, \`e una topologia connettivamente coerente, una majority dei peer in stato \texttt{alive} e timestamp dei sensori relativamente recenti per le sorgenti a frequenza elevata.
+In a stable cluster, the expected outcome is a topologically coherent view, a majority of peers in \texttt{alive} state, and relatively recent sensor timestamps for high-frequency sources.
 
-\subsection{Interpretazione dei principali segnali osservabili}
+\subsection{Interpreting key observable signals}
 
-Durante l'uso del sistema \`e utile interpretare alcuni indicatori operativi:
+During operation, it is useful to interpret several operational indicators:
 \begin{itemize}
-  \item se compaiono molti eventi \texttt{sensor\_update\_received} con \texttt{applied:false}, significa che il nodo riceve aggiornamenti gi\`a superati dal criterio LWW;
-  \item se il contatore \texttt{get\_delta\_unavailable\_total} cresce, il buffer dei delta incrementali potrebbe essere troppo corto rispetto al carico o ai tempi di riconnessione;
-  \item se un peer passa frequentemente da \texttt{alive} a \texttt{suspected}, \`e plausibile che la rete simulata o l'intervallo degli heartbeat stiano introducendo transienti visibili dal failure detector;
-  \item se i timestamp dei sensori appaiono troppo vecchi nella UI, \`e opportuno ridurre la pressione di pull oppure aumentare \texttt{REPLICATION\_DELTA\_MAXLEN}.
+  \item if many \texttt{sensor\_update\_received} events appear with \texttt{applied:false}, the node is receiving updates already superseded by the LWW criterion;
+  \item if the \texttt{get\_delta\_unavailable\_total} counter increases, the incremental-delta buffer may be too short for current load or reconnection times;
+  \item if a peer frequently transitions from \texttt{alive} to \texttt{suspected}, the simulated network or heartbeat interval may be introducing transients visible to the failure detector;
+  \item if sensor timestamps appear too old in the UI, it is advisable to reduce pull pressure or increase \texttt{REPLICATION\_DELTA\_MAXLEN}.
 \end{itemize}
 
-La dashboard \`e quindi non solo uno strumento dimostrativo, ma una componente importante per la diagnosi sperimentale del comportamento distribuito.
+The dashboard is therefore not only a demonstration tool, but also an important component for experimental diagnosis of distributed behavior.
 
-\subsection{Scenari di uso consigliati}
+\subsection{Recommended usage scenarios}
 
-Dal punto di vista didattico e dimostrativo, gli scenari pi\`u significativi sono i seguenti:
+From a didactic and demonstration standpoint, the most significant scenarios are:
 \begin{itemize}
-  \item \textbf{convergenza in condizioni normali}: avvio del cluster e osservazione della progressiva uniformazione dello stato;
-  \item \textbf{crash e recovery}: arresto temporaneo di un nodo e verifica del catch-up tramite delta o full sync;
-  \item \textbf{rete degradata}: uso di ritardi e perdita pacchetti configurati nel Compose per osservare effetti su heartbeat e freschezza dei dati;
-  \item \textbf{scalabilit\`a osservabile}: confronto tra topologie a 2, 6 e 12 nodi tramite la stessa UI.
+  \item \textbf{convergence under normal conditions}: start the cluster and observe progressive state alignment;
+  \item \textbf{crash and recovery}: temporarily stop one node and verify catch-up through deltas or full sync;
+  \item \textbf{degraded network}: use delays and packet loss configured in Compose to observe effects on heartbeats and data freshness;
+  \item \textbf{observable scalability}: compare 2-node, 6-node, and 12-node topologies through the same UI.
 \end{itemize}
 
-Per scenari di fault injection ripetuti \`e disponibile anche lo script \texttt{manual\_tests/compose\_chaos.py}, utile per introdurre arresti e riavvii controllati di singoli servizi durante l'esecuzione del cluster.
+For repeated fault-injection scenarios, the script \texttt{manual\_tests/compose\_chaos.py} is also available and useful to introduce controlled stop/restart cycles of individual services while the cluster is running.
 
-\subsection{Uso di un'immagine pubblicata tramite release}
+\subsection{Using an image published through release}
 
-Se non si desidera costruire localmente l'immagine Docker, \`e possibile usare direttamente una release generata dalla pipeline di continuous delivery. La release non viene per\`o creata a ogni commit: essa viene prodotta quando a un commit viene assegnato un tag di versione, ad esempio \texttt{v1.0.0}, associato all'immagine del nodo caricata su GitHub Container Registry.
+If building the Docker image locally is not desired, it is possible to use a release generated by the continuous-delivery pipeline directly. However, a release is not created for every commit: it is produced when a version tag is assigned to a commit, for example \texttt{v1.0.0}, associated with the node image uploaded to GitHub Container Registry.
 
-Il flusso operativo \`e il seguente:
+The operational flow is as follows:
 \begin{enumerate}
-  \item creare localmente il tag di versione e pubblicarlo sul repository remoto;
-  \item aprire la sezione \emph{Releases} del repository;
-  \item selezionare la release corrispondente al commit desiderato;
-  \item scaricare gli asset allegati, in particolare il file \texttt{.env} di esempio e il \texttt{docker-compose} minimale;
-  \item adattare i parametri principali del file \texttt{.env};
-  \item avviare il container tramite Compose oppure usare direttamente il comando \texttt{docker run} riportato nelle note della release.
+  \item create the version tag locally and publish it to the remote repository;
+  \item open the repository \emph{Releases} section;
+  \item select the release corresponding to the desired commit;
+  \item download attached assets, especially the example \texttt{.env} file and minimal \texttt{docker-compose};
+  \item adapt the main parameters of the \texttt{.env} file;
+  \item start the container through Compose or use the \texttt{docker run} command reported in release notes.
 \end{enumerate}
 
-Un esempio di pubblicazione della release \`e:
+An example of release publication is:
 \begin{verbatim}
 git tag v1.0.0
 git push origin v1.0.0
 \end{verbatim}
 
-Un esempio tipico di esecuzione tramite gli asset allegati \`e:
+A typical execution example using attached assets is:
 \begin{verbatim}
 cp docker-node.env.example docker-node.env
 docker compose -f docker-compose.release.yml up -d
 \end{verbatim}
 
-In alternativa, resta disponibile anche l'avvio diretto con digest:
+Alternatively, direct startup by digest is also available:
 \begin{verbatim}
 docker pull ghcr.io/<owner>/<repo>@sha256:<digest>
 docker run --rm -p 9000:9000 -p 10000:10000 \
@@ -120,7 +120,6 @@ docker run --rm -p 9000:9000 -p 10000:10000 \
   ghcr.io/<owner>/<repo>@sha256:<digest>
 \end{verbatim}
 
-Questa modalit\`a \`e utile quando si vuole eseguire rapidamente un nodo coerente con uno specifico commit del branch principale, mantenendo al tempo stesso la riproducibilit\`a dell'ambiente tramite riferimento immutabile al digest dell'immagine.
+This mode is useful when rapidly running a node consistent with a specific commit on the main branch, while preserving environment reproducibility through an immutable reference to the image digest.
 
 \clearpage
-
