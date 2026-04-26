@@ -1,6 +1,6 @@
 \section{Design}\label{design}
 
-This chapter describes the high-level design adopted to satisfy the requirements in \cref{requirements}. The central design goal is to support autonomous multi-node execution (FR1), cluster-wide sensor-state dissemination (FR3), deterministic convergence (FR4), recovery after failures (FR7), read-only observability (FR8), and optional human-oriented monitoring (FR12), while preserving decentralization (NFR1), eventual consistency (NFR2), and partition tolerance (NFR3).
+This chapter describes the high-level design adopted to satisfy the requirements in \cref{requirements}. The main design goal is to support autonomous nodes (FR1), local sensor ingestion and replicated convergence (FR2--FR4), decentralized membership and liveness observation (FR5--FR6), recovery after failures (FR7), and read-only monitoring (FR8, FR12), while preserving decentralization, eventual consistency, partition tolerance, and course-scale experimental scalability (NFR1--NFR3, NFR7).
 
 \subsection{Architecture}\label{architecture}
 
@@ -8,9 +8,9 @@ The system follows a \textbf{fully decentralized peer-to-peer architecture} in w
 
 From a logical viewpoint, the architecture is organized into three cooperating planes:
 \begin{itemize}
-  \item a \textbf{control plane}, responsible for peer discovery, membership maintenance, liveness observation, and topology knowledge;
-  \item a \textbf{data plane}, responsible for local sensor ingestion, local state maintenance, and state dissemination among peers;
-  \item an \textbf{observability plane}, responsible for exposing cluster snapshots, metrics, and monitoring views to operators and observer clients.
+  \item a \textbf{control plane}, responsible for decentralized peer discovery, membership maintenance, peer knowledge propagation, adaptive liveness observation, Phi Accrual status classification, and topology knowledge;
+  \item a \textbf{data plane}, responsible for local sensor ingestion, local state maintenance, deterministic merge semantics, push-pull anti-entropy exchange, and full-state rejoin synchronization;
+  \item an \textbf{observability plane}, responsible for exposing cluster snapshots, fault evidence, metrics, and monitoring views to operators and observer clients.
 \end{itemize}
 
 This separation is important because the project intentionally distinguishes between \emph{knowing who is in the system} and \emph{replicating what the system knows about sensors}. Membership and liveness information evolve under different timing assumptions and serve different purposes than sensor-state replication. Keeping the two concerns separate improves modularity, clarity, and evolvability, which supports NFR6 and the maintainability goals discussed in \cref{ds-features}.
