@@ -1,6 +1,6 @@
 \section{Design}\label{design}
 
-This chapter describes the high-level design adopted to satisfy the requirements in \cref{requirements}. The central design goal is to support autonomous multi-node execution (FR1), cluster-wide sensor-state dissemination (FR3), deterministic convergence (FR4), recovery after failures (FR7), and strong observability (FR8--FR9), while preserving decentralization (NFR1), eventual consistency (NFR2), and partition tolerance (NFR3).
+This chapter describes the high-level design adopted to satisfy the requirements in \cref{requirements}. The central design goal is to support autonomous multi-node execution (FR1), cluster-wide sensor-state dissemination (FR3), deterministic convergence (FR4), recovery after failures (FR7), read-only observability (FR8), and optional human-oriented monitoring (FR12), while preserving decentralization (NFR1), eventual consistency (NFR2), and partition tolerance (NFR3).
 
 \subsection{Architecture}\label{architecture}
 
@@ -42,7 +42,7 @@ The only optional external-facing component is the browser dashboard, which is n
 The distributed deployment model is therefore the following:
 \begin{itemize}
   \item one or more nodes run on different processes, containers, or machines;
-  \item each node may host a different local set of sensors;
+  \item each node may manage a different local set of sensor sources or sensor connections;
   \item nodes communicate directly with peers over the inter-node network;
   \item observers may connect to any node's read-only web interface or HTTP API.
 \end{itemize}
@@ -127,7 +127,7 @@ The main interaction patterns are:
   \item \textbf{polling-based observation}, used by the dashboard and external tools to inspect cluster state.
 \end{itemize}
 
-This design supports FR3, FR5, FR6, FR7, and FR8 because it combines low-coupling peer communication with an observation interface that stays orthogonal to the replicated core.
+This design supports FR3, FR5, FR6, FR7, FR8, FR9, FR10, FR11, and FR12 because it combines low-coupling peer communication with an observation interface that stays orthogonal to the replicated core.
 
 \subsection{Behaviour}\label{behaviour}
 

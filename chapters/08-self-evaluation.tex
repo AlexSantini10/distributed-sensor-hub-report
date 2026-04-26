@@ -1,34 +1,31 @@
 \section{Self-evaluation}\label{self-evaluation}
 
-This chapter must be completed individually by each group member before final submission. To maintain a tone consistent with the rest of the report while clearly distinguishing personal responsibility for the content, a common structure is provided and should be replicated once for each student.
+This project was carried out as an individual project by Alex Santini. The following self-evaluation therefore reports the complete personal contribution to the design, implementation, validation, deployment, and documentation activities.
 
-The objective of this section is not only to describe operational contribution, but also to provide a critical assessment of the work performed, honestly highlighting strengths, limitations that emerged during development, and the role effectively covered in the project.
-
-\subsection{[First Name Last Name]}
+\subsection{Alex Santini}
 
 \textbf{Role in the project.}
-Describe concisely and objectively your predominant role within the group. Appropriate formulations may include protocol design, runtime implementation, development of automated tests, containerization management, web API development, implementation of the observability dashboard, coordination of final integration, or report writing.
+As the only project member, I covered the full development lifecycle: requirements analysis, protocol and architecture design, runtime implementation, testing, containerized deployment, observability support, and final report writing. This included both the distributed core and the supporting artifacts needed to reproduce multi-node experiments.
 
 \textbf{Main contributions.}
-Report activities that were actually carried out, avoiding generic wording. It is preferable to describe concrete responsibilities, for example:
-\begin{itemize}
-  \item modules directly designed or implemented;
-  \item automated tests developed or maintained;
-  \item Docker scenarios or supporting scripts created;
-  \item debugging, integration, and refinement activities;
-  \item contributions to technical documentation and the final report.
-\end{itemize}
+The main contribution was the design and implementation of a decentralized peer-to-peer sensor-state replicator based on autonomous nodes, TCP communication, JSON protocol messages, push-pull gossip, and timestamp-based Last-Writer-Wins merging. I also implemented the membership and failure-observation mechanisms, including heartbeat-based liveness tracking and Phi Accrual failure suspicion, together with recovery paths based on incremental deltas and full-state synchronization.
+
+On the operational side, I prepared Docker Compose topologies for reproducible multi-node simulations and configured sensor profiles, bootstrap information, and fault-related parameters through environment variables. I also developed the read-only HTTP and introspection surfaces used by tests, scripts, and the optional web dashboard to observe sensor values, membership, topology, events, and replication metrics.
+
+Validation was another important part of the work. I developed and maintained tests for protocol handling, networking, state convergence, membership, failure detection, sensors, web APIs, Docker-based scenarios, crash/restart recovery, and partition reconciliation. These tests helped connect the intended distributed-systems properties with observable behavior in repeatable experiments.
 
 \textbf{Product strengths.}
-Indicate aspects that, from your perspective, represent the best outcomes of the project. In this type of document, it is appropriate to focus on verifiable technical elements, such as architecture modularity, experiment reproducibility, observability clarity, solid test coverage, or correctness of convergence behavior.
+The strongest aspect of the product is that the main distributed mechanisms are implemented explicitly rather than hidden behind a broker or external middleware. This makes gossip dissemination, membership propagation, failure suspicion, timestamp-based conflict resolution, and recovery behavior directly observable. The project also benefits from a reproducible deployment model, a clear separation between control plane, data plane, and observability plane, and a validation strategy that combines unit tests, integration tests, Docker scenarios, and manual observation.
 
 \textbf{Weaknesses and limitations.}
-This part should explicitly state real limitations of the system or development process. Relevant considerations include, for example, the absence of authentication, lack of durable persistence, dependence on simplified LWW policies, incomplete coverage of some extreme scenarios, or the need for manual tuning in denser topologies.
+The system remains a course-project prototype rather than a production-ready smart-city platform. It does not implement authentication, authorization, or transport encryption; it stores runtime state in memory rather than in durable local storage; and its Last-Writer-Wins policy is deterministic but semantically simple. Larger topologies would also require more systematic quantitative evaluation of gossip overhead, convergence latency, and failure-detector sensitivity.
 
 \textbf{Personal evaluation of contribution.}
-Conclude with a brief critical reflection on your contribution: which decisions were most successful, which activities required more iterations, and what could have been improved in terms of design, testing, or coordination.
+The most successful decisions were keeping the architecture decentralized, making observability a first-class part of the system, and validating recovery and convergence through reproducible Docker scenarios. The parts that required the most iteration were the balance between incremental anti-entropy and full synchronization, and the tuning of failure detection under delayed or lossy communication. With more time, I would strengthen the quantitative evaluation, add durable snapshots, and harden the security boundaries while preserving the educational transparency of the implementation.
 
-\textit{Note.}
-The subsection above should be duplicated for each group member, replacing the placeholder \texttt{[First Name Last Name]} with actual names. Each student is exclusively responsible for their own part.
+\textbf{Group members.}
+\begin{itemize}
+  \item Alex Santini -- \texttt{alex.santini2@studio.unibo.it}
+\end{itemize}
 
 \clearpage
