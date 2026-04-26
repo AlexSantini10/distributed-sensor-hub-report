@@ -157,24 +157,34 @@ The documented deployment can be instantiated with multi-node topologies, such a
 \subsection{Implementation Constraints}
 \label{implementation-constraints}
 
-\textbf{IR1 -- Self-contained deployment.}
-The project shall be executable in a self-contained way on commodity machines used for development and evaluation, without requiring paid or institution-managed cloud infrastructure.
+\textbf{IR1 -- Self-contained local deployment.}
+The project shall be executable on commodity development machines without requiring paid cloud services, institution-managed infrastructure, or external managed services.
 
 \textbf{Justification.}
-This constraint follows from course-project reproducibility and portability requirements.
+The system is intended for course-project evaluation and distributed-systems experimentation. Its deployment model must therefore remain portable and reproducible from the repository itself.
 
 \textbf{Acceptance criterion.}
-The system can be started locally with the provided repository artifacts and documented dependencies.
+An operator can start one or more nodes using the repository code, documented dependencies, and provided deployment artifacts without provisioning external infrastructure.
 
 \medskip
-\textbf{IR2 -- Reproducible multi-node setup.}
-The project shall provide a reproducible way to instantiate representative multi-node deployments for demonstrations and validation.
+\textbf{IR2 -- Reproducible predefined topologies.}
+The project shall provide predefined multi-node deployment configurations that can be reused for demonstrations, validation, and fault-injection experiments.
 
 \textbf{Justification.}
-The report and validation activities require repeatable distributed scenarios, including fault-injection experiments.
+Validation requires repeatable cluster scenarios with stable node identities, network coordinates, sensor configurations, and observation endpoints.
 
 \textbf{Acceptance criterion.}
-An operator can launch a predefined topology from the repository and repeat the same experiment configuration with consistent system roles and interfaces.
+An operator can launch the documented predefined topologies and obtain consistent node identities, sensor sources, peer relationships, and monitoring interfaces across repeated runs.
+
+\medskip
+\textbf{IR3 -- Course-scale experimental scope.}
+The implementation shall target small and medium experimental clusters suitable for local execution and course validation, rather than production-scale IoT deployments.
+
+\textbf{Justification.}
+The system is designed to demonstrate distributed-systems properties under controlled conditions, not to satisfy industrial-scale availability, performance, or device-management requirements.
+
+\textbf{Acceptance criterion.}
+The provided configurations and validation scenarios support representative multi-node deployments suitable for evaluating convergence, partition behavior, recovery, and observability at course-project scale.
 
 \subsection{Relevant Distributed System Features}
 \label{ds-features}
