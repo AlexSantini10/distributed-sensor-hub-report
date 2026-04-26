@@ -23,10 +23,9 @@ Within each node, the architecture is further layered:
 \end{itemize}
 
 This layered organization keeps low-level communication concerns separate from distributed-system semantics. As a consequence, the same conceptual design would still hold if the underlying transport or encoding technology changed, which is consistent with the intended role of the design chapter.
-
 \subsection{Infrastructure}\label{infrastructure}
 
-The infrastructure is intentionally minimal. The essential infrastructural unit is the \textbf{node process}, replicated one time for each participant in the cluster. Every node contains the same internal subsystems: sensor ingestion, local state management, peer membership handling, failure detection, peer-to-peer protocol handling, and a read-only HTTP observation interface. This homogeneous-node model simplifies deployment and supports both FR1 and NFR5, because the same runtime can be instantiated in different topologies without role specialization.
+The infrastructure is intentionally minimal. The essential infrastructural unit is the \textbf{node process}, replicated one time for each participant in the cluster. Every node contains the same internal subsystems: sensor ingestion, local state management, peer membership handling, failure detection, TCP protocol handling, and a read-only HTTP observation interface. This homogeneous-node model simplifies deployment and supports both FR1 and NFR5, because the same runtime can be instantiated in different topologies without role specialization.
 
 No external infrastructural component is required for normal operation. In particular, the design does not rely on:
 \begin{itemize}
@@ -41,13 +40,13 @@ The only optional external-facing component is the browser dashboard, which is n
 
 The distributed deployment model is therefore the following:
 \begin{itemize}
-  \item one or more nodes run on different processes, containers, or machines;
-  \item each node may manage a different local set of sensor sources or sensor connections;
+  \item one or more nodes can run as separate processes, containers, or machines, while distributed behavior is exercised when at least two nodes are active;
+  \item each node may manage a different local set of sensor sources or sensor providers;
   \item nodes communicate directly with peers over the inter-node network;
-  \item observers may connect to any node's read-only web interface or HTTP API.
+  \item observers may connect to any node's read-only HTTP API, or use the dashboard configured to consume that API.
 \end{itemize}
 
-Component discovery is bootstrapped through a configured set of initial peers. After first contact, discovery is no longer purely static: nodes can exchange peer knowledge and extend their local membership view. Naming is based on stable node identifiers plus network coordinates required for communication. This choice is sufficient for the project scope because it avoids introducing centralized service-discovery infrastructure while still allowing evolving cluster knowledge, which is coherent with FR5 and NFR1.
+Component discovery is bootstrapped through a configured set of initial peers. After first contact, discovery is no longer purely static: nodes can exchange peer knowledge and extend their local membership view through join messages, peer-list exchange, membership gossip, and full-state synchronization metadata. Naming is based on stable node identifiers plus network coordinates required for communication. This choice is sufficient for the project scope because it avoids introducing centralized service-discovery infrastructure while still allowing evolving cluster knowledge, which is coherent with FR5 and NFR1.
 
 From a physical standpoint, the design does not assume geographic distribution at continental scale; however, it does assume that nodes may be distributed across separate machines or containers and may suffer message delay, temporary unreachability, or partial connectivity. This is exactly the failure model needed to study NFR2 and NFR3.
 
@@ -86,7 +85,7 @@ The exchanged messages can be grouped into three categories:
   \item \textbf{read-only queries}, for HTTP observation by users or tools.
 \end{itemize}
 
-The system state comprehends:
+The system state includes:
 \begin{itemize}
   \item latest winning sensor values together with origin and timestamp metadata;
   \item membership knowledge about known peers;
@@ -101,7 +100,7 @@ This model is intentionally centered on \emph{current replicated knowledge}, not
 
 There are two main interaction families in the system.
 
-The first is \textbf{peer-to-peer interaction among nodes}. This interaction is asynchronous and message-based. It is used for:
+The first is \textbf{peer-to-peer interaction among nodes}. This interaction is best-effort, message-based, and decoupled through protocol dispatch. It is used for:
 \begin{itemize}
   \item bootstrap and peer discovery;
   \item heartbeat exchange;
@@ -119,7 +118,7 @@ At the inter-node level, communication follows a layered path:
 
 The main interaction patterns are:
 \begin{itemize}
-  \item \textbf{bootstrap request/response}, used when a node joins and needs initial peer knowledge;
+  \item \textbf{bootstrap and peer-list exchange}, used when a node joins and needs initial peer knowledge;
   \item \textbf{periodic heartbeat exchange}, used to collect liveness evidence;
   \item \textbf{gossip dissemination}, used to spread membership knowledge without central coordination;
   \item \textbf{push-pull state synchronization}, used to exchange recent sensor-state updates efficiently;
