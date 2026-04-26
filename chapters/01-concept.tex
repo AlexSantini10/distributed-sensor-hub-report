@@ -1,7 +1,7 @@
 \section{Concept}\label{concept}
 
 \textbf{Product type.}
-The software is a distributed experimental platform composed of autonomous peer-to-peer nodes and an optional web monitoring interface.
+The software is a distributed sensor-monitoring platform composed of autonomous peer-to-peer nodes and an optional web monitoring interface.
 Concretely, it combines:
 \begin{itemize}
   \item a set of autonomous nodes that collect and replicate sensor data without a central coordinator;
@@ -10,19 +10,29 @@ Concretely, it combines:
 
 
 \textbf{Use case description.}
-The system models a smart-city scenario in which multiple nodes ingest local sensor readings, maintain a local view of shared data, and exchange updates across the peer network. The project is intentionally framed as a controlled distributed-systems laboratory rather than a production-ready urban platform, so that the core distributed properties can be observed and studied directly.
+The system models a smart-city scenario in which multiple nodes ingest local sensor readings, maintain a local view of shared data, and exchange updates across the peer network. Each node can be deployed close to a local sensing point, connected to one or more sensor sources, and joined to the distributed network so that locally produced readings become part of a shared, replicated monitoring view.
 
 The platform supports two main interaction profiles:
 \begin{itemize}
   \item \emph{observational interaction}: users inspect sensor values, node health, and topology evolution;
-  \item \emph{operational interaction}: users start experiments, configure nodes, and observe behavior under faults.
+  \item \emph{operational interaction}: users configure nodes, connect sensor sources, attach nodes to the network, monitor health, and react to faults.
 \end{itemize}
 
-Users interact through standard HTTP APIs and, optionally, through a browser-based monitoring UI. Data handled by the system is technical runtime information (sensor values, node metadata, and observability data), not personal user information.
+The system addresses three main usage profiles:
+\begin{itemize}
+  \item \emph{technical operators}, who administer the deployment by installing or starting node processes, configuring their network identity and bootstrap peers, connecting local sensor sources to the appropriate node, exposing the required service ports, monitoring health, and intervening when nodes fail or connectivity changes;
+  \item \emph{information operators and observers}, who inspect the replicated sensor state, membership information, topology knowledge, and operational views exposed by the system in order to understand what the distributed deployment is currently reporting;
+  \item \emph{automatic tools}, such as monitoring scripts, alerting components, integration services, or external dashboards, which consume the same read-only interfaces to exploit shared sensor and operational data without manually operating the distributed core.
+\end{itemize}
+
+Users interact with the system during deployment, routine supervision, and fault handling. Operators configure nodes and sensor connections when a sensing point is added or modified, start or restart nodes when the deployment changes, and check that the exposed APIs and peer connections are reachable. During normal operation, observers interact repeatedly through read-only HTTP endpoints such as \texttt{/api/state}, \texttt{/api/membership}, and \texttt{/api/introspection}, or through the dashboard, which polls the introspection API at regular intervals to display live state, membership, topology, events, and metrics. Additional interactions occur when failures, restarts, or network disruptions happen: operators inspect API responses, dashboard views, logs, metrics, and synchronization evidence to verify liveness transitions, recovery, and convergence. Thus, interaction is not continuous manual control of the distributed core, but periodic supervision and operational intervention around automated node-to-node communication.
+
+Data handled by the system is technical runtime information, such as sensor values, node metadata, membership state, metrics, and observability data, not personal user information.
 
 Interaction channels and devices:
 \begin{itemize}
   \item HTTP API for programmatic interaction, monitoring, and integration with external tools;
+  \item automatic monitoring, alerting, or integration tools consuming read-only API data;
   \item desktop/laptop web browser for optional dashboard-based monitoring.
 \end{itemize}
 
