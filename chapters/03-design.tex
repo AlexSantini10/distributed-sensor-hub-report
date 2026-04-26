@@ -189,6 +189,10 @@ Data is shared among components in well-defined ways:
 
 This read/write asymmetry is deliberate: observation must remain decoupled from mutation so that FR8 can be satisfied without introducing accidental feedback paths.
 
+Concurrent access to local state is expected because sensor ingestion, TCP protocol handlers, replication publishing, heartbeat evaluation, and HTTP polling may run at the same time. The design therefore separates write ownership and read access. Local sensor producers do not conceptually mutate the replicated state directly: they emit readings into an ingestion path consumed by the local state manager. Remote updates and full-sync responses also enter through explicit merge operations, while observers receive snapshots rather than direct references to mutable stores.
+
+The consequence is that concurrent reads and writes are allowed, but they are confined to node-local stores and protected by implementation-level synchronization. There is no distributed transaction spanning sensor state, membership, topology, and observability data. This limitation is acceptable because these views are intended to be eventually consistent, approximate, and inspectable rather than globally atomic.
+
 \subsection{Fault-Tolerance}\label{fault-tolerance}
 
 Fault tolerance is one of the central design drivers of the project. The first mechanism is \textbf{state replication}: sensor-state knowledge is disseminated among peers so that the system does not depend on a unique owner of cluster knowledge. Replication is best-effort and decentralized, which supports NFR1 and NFR3 even though it does not provide instantaneous consistency.

@@ -18,6 +18,8 @@ Highly relevant. Each node runs the full runtime stack independently: local sens
 \textbf{Fault tolerance and recoverability.}
 Highly relevant. Nodes may crash, restart, or become temporarily unreachable during experiments. Surviving nodes are expected to keep ingesting local readings, serving read-only snapshots, exchanging updates with reachable peers, and maintaining their local membership view. A restarted or reconnected node recovers by exchanging missing deltas when possible and by falling back to full-state synchronization when incremental history is insufficient. The system prioritizes continued local availability and eventual recovery over uninterrupted global consistency.
 
+The project does not require or guarantee a fixed recovery time. Fault detection and recovery are eventual and parameter-dependent: peer suspicion depends on heartbeat interval, Phi Accrual thresholds, accumulated heartbeat history, and network conditions, while state recovery depends on gossip cadence, pull frequency, delta-buffer retention, and the availability of at least one sufficiently up-to-date reachable peer. With the default one-second heartbeat interval, the phi thresholds provide an approximate suspicion window of a few seconds and a longer dead-peer classification window, but these are experimental expectations rather than hard real-time guarantees.
+
 \medskip
 \textbf{Failure detection and fault observability.}
 Highly relevant. The membership subsystem uses heartbeat evidence and a Phi Accrual Failure Detector to derive peer states such as \texttt{alive}, \texttt{suspected}, and \texttt{dead}. These states are intentionally visible through membership and introspection endpoints, together with recent control-plane events and replication metrics. The goal is not only to tolerate failures, but also to make failure and recovery dynamics inspectable during distributed-systems experiments.
@@ -57,6 +59,27 @@ Limited in the current scope. The platform is designed for trusted local or labo
 \medskip
 \textbf{Economy and cost.}
 Relevant as an implementation constraint. The system is expected to run on ordinary development machines using repository-provided artifacts, Python dependencies, and Docker Compose topologies. It does not require paid cloud infrastructure, managed services, or institution-provided deployment platforms. This supports reproducibility, portability, and low-cost course evaluation.
+
+\subsection{Glossary}
+\label{glossary}
+
+The following terms are used throughout the report with the meanings adopted by this project:
+\begin{description}
+  \item[\textbf{Gossip}] Best-effort dissemination of node-local knowledge, especially membership and topology information, through periodic peer-to-peer messages.
+  \item[\textbf{Anti-entropy}] Periodic synchronization mechanism used to reduce divergence between replicas. In this project it is implemented as push-pull replication, where nodes both advertise local sensor deltas and request missing updates.
+  \item[\textbf{Phi Accrual Failure Detector}] Adaptive heartbeat-based failure detector that converts heartbeat inter-arrival timing into a suspicion score used to classify peers as \texttt{alive}, \texttt{suspected}, or \texttt{dead}.
+  \item[\textbf{Last-Writer-Wins}] Deterministic conflict-resolution policy in which the update with the greatest timestamp wins, with the origin identifier used as a deterministic tie-breaker when timestamps are equal.
+  \item[\textbf{Delta}] Incremental replication entry representing a sensor-state update together with sequence, origin, timestamp, value, and metadata. Deltas are retained in a bounded in-memory buffer.
+  \item[\textbf{Full sync}] Complete state transfer used when a node joins, rejoins, or can no longer recover from retained deltas alone.
+  \item[\textbf{Membership}] A node-local table of known peers, including network coordinates, liveness status, heartbeat evidence, phi score, and related metadata.
+  \item[\textbf{Bootstrap peer}] Initially configured peer endpoint used to seed discovery and start communication with the rest of the cluster.
+  \item[\textbf{Replicated sensor state}] The node-local Last-Writer-Wins view of the latest winning sensor records known by that node.
+  \item[\textbf{Introspection}] Read-only aggregate observation API exposing sensor state, membership, topology, events, and metrics using a stable schema.
+  \item[\textbf{Topology}] Node-local or merged knowledge about graph-like relations among peers, used mainly for observability and connection policy.
+  \item[\textbf{Eventual consistency}] Consistency model in which replicas may temporarily diverge, but converge after communication is restored and the same update set is exchanged.
+  \item[\textbf{Sensor provider}] Local producer that emits sensor readings into the ingestion pipeline.
+  \item[\textbf{Replication cursor}] Monotonic per-node sequence value used to request missing deltas during pull replication; it is not used for conflict resolution.
+\end{description}
 
 \subsection{Functional Requirements}
 \label{functional-requirements}

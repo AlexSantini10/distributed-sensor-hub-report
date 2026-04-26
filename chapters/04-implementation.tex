@@ -84,6 +84,8 @@ The runtime is based on \textbf{threads}, background worker loops, and in-memory
 
 This approach was preferred to a more complex actor framework or asynchronous event-loop architecture because it keeps the execution model explicit and understandable, which is desirable for an educational distributed-systems project.
 
+Concurrent access to local replicated state is handled through a combination of queue-based ingestion and explicit locking. Local sensor providers enqueue normalized sensor events into a thread-safe event queue consumed by the \texttt{NodeStateWorker}; remote protocol handlers can invoke merge operations for \texttt{SENSOR\_UPDATE} and \texttt{FULL\_SYNC\_RESPONSE} messages. The underlying \texttt{NodeStateStore} protects sensor records, update buffers, replication deltas, sequence cursors, and origin-sequence tracking with a mutex. Membership and failure-detector state are protected separately by locks in the peer table and heartbeat monitor. This mitigates in-process race conditions among sensor generation, TCP handlers, replication publishing, heartbeat evaluation, and HTTP polling. The remaining limits are deliberate: state and membership are not updated atomically as one transaction, replication buffers are bounded and volatile, and recovery relies on peer synchronization rather than durable local storage.
+
 \textbf{Configuration management.}
 Node configuration is externalized through \textbf{environment variables}. Parameters such as node identity, ports, bootstrap peers, sensor definitions, replication cadence, failure-detector thresholds, and fault-injection options are all configurable from the environment. This makes it easy to instantiate different topologies and experimental scenarios without changing source code.
 
