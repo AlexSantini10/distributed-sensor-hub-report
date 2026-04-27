@@ -12,7 +12,7 @@ To run the project from scratch, the following tools are required:
   \item optionally, a web browser to inspect the observability dashboard and HTTP endpoints exposed by nodes.
 \end{itemize}
 
-Runtime dependencies are intentionally minimal and defined in \texttt{requirements.txt}; development and static-analysis tools are instead collected in \texttt{requirements-dev.txt} and in \texttt{package.json} for the sole \texttt{pyright} dependency.
+Runtime dependencies are intentionally minimal and defined in \texttt{requirements.txt}; development and static-analysis tools are instead collected in \texttt{requirements-dev.txt}, while \texttt{package.json} supports npm-based execution of \texttt{pyright}.
 
 \subsection{Local installation}
 
@@ -30,7 +30,11 @@ cd distributed-sensor-hub
 pip install -r requirements.txt
 \end{verbatim}
 
-At the end of the installation, the repository is ready both for direct execution of a single node and for running automated tests. A recommended initial check is to run \texttt{python -m pytest -m "not integration" -q}, so that local environment consistency can be verified immediately.
+At the end of the installation, the repository is ready both for direct execution of a single node and for running automated tests. A recommended initial check is:
+\begin{verbatim}
+python -m pytest -m "not integration" -q
+\end{verbatim}
+This verifies local environment consistency immediately.
 
 \subsection{Configuration through environment variables}
 
@@ -58,6 +62,8 @@ $env:HOST="0.0.0.0"
 $env:PORT="9000"
 $env:BOOTSTRAP_PEERS=""
 $env:WEB_API_PORT="10000"
+$env:LOG_LEVEL="INFO"
+$env:LOG_FILE="logs/node-1.log"
 python node.py
 \end{verbatim}
 
@@ -67,13 +73,13 @@ The expected result is startup of the node with active TCP listener and HTTP ser
 
 Multi-node deployment is based on Docker Compose. The repository includes multiple Compose files, each targeting a different experimental scenario:
 \begin{itemize}
-  \item \texttt{docker/docker-compose-base.yml}: minimal topology, quick to start, useful for smoke tests and quick demos;
+  \item \texttt{docker/docker-compose-base.yml}: minimal 2-node topology, quick to start, useful for smoke tests and quick demos;
   \item \texttt{docker/docker-compose-6-nodes.yml}: intermediate scenario, suitable for clearly observing state convergence and gossip dynamics;
   \item \texttt{docker/docker-compose-12-nodes.yml}: denser scenario, designed to stress dissemination and observability readability;
   \item Compose files dedicated to integration tests: used for deterministic scenarios and automated validation.
 \end{itemize}
 
-Startup is performed with commands such as:
+Startup is performed with commands such as the following, choosing one topology at a time because the scenarios expose overlapping container names and host ports:
 \begin{verbatim}
 docker compose -f docker/docker-compose-base.yml up --build -d
 docker compose -f docker/docker-compose-6-nodes.yml up --build -d
@@ -114,10 +120,12 @@ In this way, deployment is not considered complete only when processes are activ
 
 \subsection{Continuous delivery of the Docker image}
 
-To simplify node reuse outside the local development environment, the repository also includes a continuous-delivery pipeline based on GitHub Actions. On each push to the \texttt{main} branch, the workflow builds the node image from \texttt{docker/Dockerfile.base} and publishes it to GitHub Container Registry, keeping rolling tags such as \texttt{latest} and \texttt{main} up to date.
+The project also includes a versioned continuous-delivery path for Docker images. The Docker CD workflow is triggered on pushes to the \texttt{main} branch, pull requests targeting \texttt{main}, manual execution, and version tags matching the \texttt{v*} pattern.
 
-Creation of a GitHub Release instead occurs only when a version tag is associated with a commit, for example \texttt{v1.0.0}. In that case, the workflow also publishes the versioned image tag and generates a dedicated release containing the artifact digest and a small operational bundle: concise instructions, an example \texttt{.env} file, and a minimal \texttt{docker-compose} file already pinned to the released image. This separates the continuous-integration flow from publication of explicit versions intended for distribution.
+For normal pushes to \texttt{main}, the workflow builds the node image from \texttt{docker/Dockerfile.base} and publishes it to GitHub Container Registry. The image receives rolling tags such as \texttt{latest}, \texttt{main}, and a commit-based \texttt{sha-*} tag. This makes the most recent development version easy to pull while still preserving a commit-specific image reference.
 
-This choice improves deployment traceability: the link between versioned source, built image, and operational instructions remains explicit, facilitating both demonstrations and reproduction of a specific state of the distributed system.
+Versioned delivery happens when a Git tag such as \texttt{v1.0.0} is pushed. In that case, the same workflow also publishes a Docker image tagged with the version name and creates a GitHub Release. The release contains the immutable image digest and a small operational bundle: a release note file, an example environment file for running one node, a minimal Docker Compose file pinned to the exact image digest, and a short README.
+
+This separates rolling deployment from explicit version publication. The \texttt{main} and \texttt{latest} tags are convenient for continuous development, while version tags provide reproducible release points. Because the release Compose file references the image by digest, a user can recreate the exact container image associated with that source version rather than depending on a mutable tag.
 
 \clearpage
