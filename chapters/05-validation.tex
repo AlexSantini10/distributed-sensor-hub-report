@@ -9,7 +9,7 @@ The foundation of the validation plan is a unit test suite developed with \textt
 \begin{itemize}
   \item \texttt{tests/protocol/}: correctness of serialization, deserialization, validation, and dispatch of application-protocol messages;
   \item \texttt{tests/networking/}: TCP framing, client/server connection handling, operational limits, and transport robustness;
-  \item \texttt{tests/state/}: deterministic application of the Last-Writer-Wins policy and maintenance of incremental deltas;
+  \item \texttt{tests/state/}: deterministic application of the Last-Write-Wins policy and maintenance of incremental deltas;
   \item \texttt{tests/membership/} and \texttt{tests/fd/}: membership-view updates, heartbeat handling, and \emph{phi-accrual} estimation for peer classification;
   \item \texttt{tests/sensors/}: behavior of simulated sensor generators and the related lifecycle manager;
   \item \texttt{tests/webapi/} and \texttt{tests/introspection/}: consistency of read-only HTTP endpoints and of the introspection contract exposed to clients.
@@ -33,21 +33,31 @@ The third validation layer uses Docker Compose topologies to exercise the softwa
   \item \texttt{tests/integration/test\_docker\_deterministic\_state\_convergence.py}, which replicates convergence verification on containerized nodes;
   \item \texttt{tests/integration/test\_docker\_crash\_restart\_recovery.py}, which evaluates recovery after node stop and restart;
   \item \texttt{tests/integration/test\_docker\_partition\_reconciliation.py}, which verifies state reconciliation after a connectivity discontinuity;
-  \item \texttt{tests/integration/verify\_cluster.py}, used as a smoke test to check correct cluster startup and reachability of primary endpoints.
+  \item \texttt{tests/integration/verify\_cluster.py}, used as an end-to-end smoke test to check correct cluster startup and reachability of primary endpoints.
 \end{itemize}
 
 The main advantage of this solution is that the same deployment setup used for demonstrations is reused as test infrastructure. This reduces the distance between development, verification, and presentation environments, improving the reproducibility of experiments.
 
 \textbf{Execution automation.}
-Automated test execution is also supported by CI workflows defined in \texttt{.github/workflows/unit-tests.yml} and \texttt{.github/workflows/integration-tests.yml}. The unit-test pipeline installs dependencies and runs \texttt{pytest} while excluding integration tests, whereas the integration pipeline runs both deterministic convergence checks and a smoke test on Docker clusters. This automation helps detect regressions in both local logic and the most relevant distributed scenarios.
+Automated test execution is also supported by CI workflows defined in \texttt{.github/workflows/unit-tests.yml} and \texttt{.github/workflows/integration-tests.yml}. The unit-test pipeline installs dependencies and runs \texttt{pytest} while excluding integration tests, whereas the integration pipeline runs both deterministic convergence checks and a smoke test on the \texttt{docker/docker-compose-base.yml} Docker topology. This automation helps detect regressions in both local logic and the most relevant distributed scenarios.
 
 \textbf{How to run the tests.}
 The main execution modes, already documented in the repository, are the following:
 \begin{itemize}
   \item unit and modular tests: \texttt{pytest --maxfail=1} or \texttt{python -m pytest -v -m "not integration"};
   \item protocol tests: \texttt{pytest -m protocol};
-  \item targeted verification of LWW convergence: \texttt{python -m pytest tests/integration/test\_deterministic\_state\_convergence.py -q -s};
-  \item Docker smoke test: start the Compose topology, then run \texttt{python tests/integration/verify\_cluster.py --timeout 60 --interval 2}.
+  \item targeted verification of LWW convergence:
+\begin{verbatim}
+python -m pytest tests/integration/test_deterministic_state_convergence.py -q -s
+\end{verbatim}
+  \item Docker end-to-end smoke test for a 6-node manual scenario: start the Compose topology with:
+\begin{verbatim}
+docker compose -f docker/docker-compose-6-nodes.yml up --build -d
+\end{verbatim}
+  then run:
+\begin{verbatim}
+python tests/integration/verify_cluster.py --timeout 60 --interval 2
+\end{verbatim}
 \end{itemize}
 
 \textbf{Coverage with respect to project goals.}
@@ -79,13 +89,15 @@ More explicitly, the main test groups map to requirements as follows:
   \item[\texttt{tests/integration/verify\_cluster.py}] performs a Docker smoke check that each node exposes replicated data from expected origins. It covers FR01, FR03, FR07, NFR5, IR1, and IR2.
 \end{description}
 
-The rationale of the main distributed tests is also requirement-driven. Deterministic convergence tests prove that autonomous nodes exchange finite sensor streams and converge to the same Last-Writer-Wins result, intercepting silent replication failures, incorrect fanout, or non-deterministic merge behavior. Docker convergence repeats the same idea in container networking, where DNS names, exposed ports, startup timing, and network isolation are closer to deployment conditions. Crash/restart recovery validates that a restarted node, after losing volatile in-memory state, can catch up through delta exchange or full synchronization, while surviving peers continue operating. Partition reconciliation checks that the system can remain locally available during a split, accept temporary divergence, and converge again after communication is restored. Full-sync handler tests specifically protect against the risk that stale cursors make recovery impossible, while web API and introspection tests protect the dashboard and external tools from unstable or incomplete observation contracts.
+The rationale of the main distributed tests is also requirement-driven. Deterministic convergence tests prove that autonomous nodes exchange finite sensor streams and converge to the same Last-Write-Wins result, intercepting silent replication failures, incorrect fanout, or non-deterministic merge behavior. Docker convergence repeats the same idea in container networking, where DNS names, exposed ports, startup timing, and network isolation are closer to deployment conditions. Crash/restart recovery validates that a restarted node, after losing volatile in-memory state, can catch up through delta exchange or full synchronization, while surviving peers continue operating. Partition reconciliation checks that the system can remain locally available during a split, accept temporary divergence, and converge again after communication is restored. Full-sync handler tests specifically protect against the risk that stale cursors make recovery impossible, while web API and introspection tests protect the dashboard and external tools from unstable or incomplete observation contracts.
+
+The validation does not attempt to prove formal correctness, Byzantine tolerance, security properties, or durable recovery after full cluster loss. These aspects are outside the current project scope.
 
 \subsection{Acceptance test}\label{acceptance-test}
 
 Alongside automated validation, manual acceptance tests were also executed, primarily focused on the system's observable and experimental aspects. These tests were performed through:
 \begin{itemize}
-  \item startup of 2-node, 6-node, and 12-node Docker clusters;
+  \item startup of base, 6-node, and 12-node Docker clusters;
   \item direct inspection of \texttt{/api/state}, \texttt{/api/membership}, \texttt{/api/introspection}, and related derived views;
   \item use of the static dashboard in \texttt{web/} to observe topology, recent events, replication metrics, and peer status;
   \item execution of \texttt{manual\_tests/compose\_chaos.py} to selectively stop and restart services during cluster execution.
