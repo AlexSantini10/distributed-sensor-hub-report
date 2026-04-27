@@ -1,6 +1,6 @@
 \section{Design}\label{design}
 
-This chapter describes the high-level design adopted to satisfy the requirements in \cref{requirements}. The main design goal is to support autonomous nodes (FR01), local sensor ingestion and replicated convergence (FR02--FR04), decentralized membership and liveness observation (FR05), recovery after failures (FR06), and read-only monitoring (FR07--FR08), while preserving decentralization, eventual consistency, partition tolerance, and course-scale experimental scalability (NFR1--NFR3, NFR7).
+This chapter describes the high-level design adopted to satisfy the requirements in \cref{requirements}. The main design goal is to support autonomous nodes (FR01), local sensor ingestion and replicated convergence (FR02--FR04), decentralized membership and liveness observation (FR05), recovery after failures (FR06), and read-only monitoring (FR07--FR08), while preserving decentralization, eventual consistency, partition tolerance, and operational scalability at the intended scale (NFR1--NFR3, NFR7).
 
 \subsection{Architecture}\label{architecture}
 
@@ -172,7 +172,7 @@ The system stores several forms of node-local runtime data:
   \item recent events and metrics for introspection.
 \end{itemize}
 
-This data is primarily \textbf{runtime state}, not long-term persistent storage. The design does not require an external database because the goal is to study distributed replication and convergence of current system knowledge rather than durable business records. This keeps the architecture lightweight and self-contained, matching IR1.
+This data is primarily \textbf{runtime state}, not long-term persistent storage. The design does not require an external database because the goal is to study distributed replication and convergence of current system knowledge rather than durable business records. This keeps the architecture lightweight and self-contained, matching IR3.
 
 Accordingly, no component performs database queries in the present design, because no database is part of the architecture. Instead, nodes read environment-backed configuration, node-local in-memory state, and data received from peers over the inter-node protocol, while observers query read-only HTTP snapshots exposed by each node.
 
@@ -180,7 +180,7 @@ Conceptually, the replicated sensor state behaves like a key-value map from a lo
 
 Consistency is handled differently for different data types:
 \begin{itemize}
-  \item \textbf{sensor state} uses eventual consistency with deterministic Last-Writer-Wins conflict resolution based on timestamp and origin metadata;
+  \item \textbf{sensor state} uses eventual consistency with deterministic Last-Write-Wins conflict resolution based on timestamp and origin metadata;
   \item \textbf{membership state} also converges eventually, but it reflects local observations that may temporarily differ across nodes;
   \item \textbf{observability data} is inherently approximate and time-sensitive, because it represents a snapshot of changing distributed state.
 \end{itemize}
@@ -236,7 +236,7 @@ Each node acts as a locally available observation point. As long as a node remai
 
 In this sense, replicated state itself plays a role analogous to availability-oriented caching: each node keeps a local working copy of shared cluster knowledge, so read operations do not require contacting a central authority.
 
-No explicit load balancing is required because there is no single mandatory ingress point for observation. Different observers may query different nodes, and each node exposes its own local view. This is sufficient for the experimental scope of the project.
+No explicit load balancing is required because there is no single mandatory ingress point for observation. Different observers may query different nodes, and each node exposes its own local view. This is sufficient for the intended scale of the project.
 
 During a \textbf{network partition}, the design favors continued local operation over blocking. Nodes inside each connected component continue to exchange information among themselves, while nodes separated by the partition stop receiving fresh updates from one another. Consequently:
 \begin{itemize}
