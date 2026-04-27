@@ -2,6 +2,7 @@
 
 \textbf{Product type.}
 The software is a distributed sensor-monitoring platform composed of autonomous peer-to-peer nodes and an optional web monitoring interface.
+More precisely, the project is primarily a distributed web-service platform: its main externally visible functionality is exposed through HTTP APIs served by executable, containerizable nodes. The optional HTML dashboard is only a lightweight observation client layered on top of the same APIs, while any compatible HTTP client can consume the service as well.
 Concretely, it combines:
 \begin{itemize}
   \item a set of autonomous nodes that collect and replicate sensor data without a central coordinator;
@@ -29,7 +30,7 @@ Users interact with the system during deployment, routine supervision, and fault
 
 The intended users are trusted operators and observers working on a development machine, Docker host, or controlled laboratory network. In the provided experimental setup, nodes run either as local Python processes or as Docker containers, while users access the exposed HTTP ports from the host machine through a browser, command-line HTTP clients, automated test harnesses, or the static dashboard. Therefore, the project is best understood as a reproducible distributed-systems experiment rather than as a public cloud service for external end users.
 
-Data handled by the system is technical runtime information, such as sensor values, node metadata, membership state, metrics, and observability data, not personal user information.
+The system does not manage personal user data or application-level user records. Consequently, there is no need to store user data anywhere. The handled information is instead technical runtime data, such as sensor values, node metadata, membership state, metrics, and observability data.
 
 Interaction channels and devices:
 \begin{itemize}
