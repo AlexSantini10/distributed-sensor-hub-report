@@ -27,6 +27,8 @@ This layered organization keeps low-level communication concerns separate from d
 
 The infrastructure is intentionally minimal. The essential infrastructural unit is the \textbf{node process}, replicated one time for each participant in the cluster. Every node contains the same internal subsystems: sensor ingestion, local state management, peer membership handling, failure detection, TCP protocol handling, and a read-only HTTP observation interface. This homogeneous-node model simplifies deployment and supports both FR1 and NFR5, because the same runtime can be instantiated in different topologies without role specialization.
 
+In concrete terms, the current design contains only two actual software component types: distributed node processes and an optional browser dashboard client. A static file server may be used to serve dashboard assets, but it is merely accessory and not part of the distributed core.
+
 No external infrastructural component is required for normal operation. In particular, the design does not rely on:
 \begin{itemize}
   \item a central database;
@@ -49,6 +51,8 @@ The distributed deployment model is therefore the following:
 Component discovery is bootstrapped through a configured set of initial peers. After first contact, discovery is no longer purely static: nodes can exchange peer knowledge and extend their local membership view through join messages, peer-list exchange, membership gossip, and full-state synchronization metadata. Naming is based on stable node identifiers plus network coordinates required for communication. This choice is sufficient for the project scope because it avoids introducing centralized service-discovery infrastructure while still allowing evolving cluster knowledge, which is coherent with FR5 and NFR1.
 
 From a physical standpoint, the design does not assume geographic distribution at continental scale; however, it does assume that nodes may be distributed across separate machines or containers and may suffer message delay, temporary unreachability, or partial connectivity. This is exactly the failure model needed to study NFR2 and NFR3.
+
+In practice, the same design supports three relevant deployment arrangements: multiple local processes on one machine, multiple Docker containers on the same host, or separate machines within a controlled laboratory network. By contrast, the repository does not define a multi-datacenter or globally distributed deployment model. Observers and the optional dashboard may run on the host machine or on any other machine that can reach a node's HTTP API.
 
 \subsection{Modelling}\label{modelling}
 
@@ -95,6 +99,8 @@ The system state includes:
 \end{itemize}
 
 This model is intentionally centered on \emph{current replicated knowledge}, not on long-term historical storage. That design keeps the project focused on convergence, liveness, and fault handling rather than on archival analytics.
+
+The lifetime of this information is intentionally volatile. Replicated sensor winners, membership state, liveness metadata, and topology knowledge are retained only for the lifetime of the node process, while individual entries may be updated or overwritten over time. Replication deltas and recent events use bounded in-memory retention, and runtime metrics are accumulated only for the duration of the current process instance.
 
 \subsection{Interaction}\label{interaction}
 
@@ -168,6 +174,8 @@ The system stores several forms of node-local runtime data:
 
 This data is primarily \textbf{runtime state}, not long-term persistent storage. The design does not require an external database because the goal is to study distributed replication and convergence of current system knowledge rather than durable business records. This keeps the architecture lightweight and self-contained, matching IR1.
 
+Accordingly, no component performs database queries in the present design, because no database is part of the architecture. Instead, nodes read environment-backed configuration, node-local in-memory state, and data received from peers over the inter-node protocol, while observers query read-only HTTP snapshots exposed by each node.
+
 Conceptually, the replicated sensor state behaves like a key-value map from a logical sensor identifier to the current winning record. The important property is not relational querying power, but deterministic merge semantics. For this reason, the core consistency problem is solved at the application level rather than delegated to a storage engine.
 
 Consistency is handled differently for different data types:
@@ -202,6 +210,8 @@ The second mechanism is \textbf{heartbeat-based liveness observation}. Nodes per
 The third mechanism is \textbf{membership gossip}. A node does not keep liveness knowledge only for itself; it disseminates updated membership information so that peer knowledge can propagate even when direct connectivity patterns are incomplete. This improves resilience of membership awareness and helps the system maintain a broader view of the cluster.
 
 The fourth mechanism is \textbf{anti-entropy recovery}. Incremental propagation is efficient when peers stay mostly synchronized, but it may be insufficient after outages, restart, or missed traffic. For this reason, the design includes a stronger recovery path that allows a lagging node to regain a coherent replicated view after disruption, directly supporting FR7.
+
+Retry behavior is present mainly as periodic or protocol-level reattempt rather than as a separate user-visible subsystem. Connection establishment can be retried with bounded backoff, heartbeat and replication rounds naturally re-attempt communication over time, and missed information can later be recovered through incremental synchronization or broader recovery exchanges.
 
 Error handling is intentionally failure-aware rather than failure-oblivious. If a component or peer becomes temporarily unavailable:
 \begin{itemize}
@@ -242,6 +252,8 @@ When the partition heals, incremental dissemination and recovery mechanisms prog
 Security is intentionally limited in the current design because, as discussed in \cref{ds-features}, it is not a primary driver of this project. The system is assumed to run in controlled laboratory, development, or trusted demonstration environments.
 
 Accordingly, the current design does \textbf{not} make authentication a core architectural dependency for either peer-to-peer traffic or read-only observation endpoints. Similarly, it does not define a rich authorization model with differentiated user permissions. The effective roles are simple: nodes participate in the distributed protocol, while observers query read-only information.
+
+The corresponding effective access rights are therefore minimal and explicit. Peer nodes may exchange internal protocol messages, maintain membership and liveness information, and update their own local replicated state. External observers and clients are limited to read-only HTTP observation, since no write-oriented or administrative HTTP API is exposed by the current design.
 
 This choice keeps the architecture aligned with the educational scope of the project and avoids obscuring the main distributed-systems concerns with security infrastructure that is orthogonal to the report goals. However, the design has been kept modular enough that stronger security policies could be introduced later at clear boundaries:
 \begin{itemize}
