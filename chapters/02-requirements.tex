@@ -28,6 +28,8 @@ Highly relevant. The membership subsystem uses heartbeat evidence and a Phi Accr
 \textbf{Consistency.}
 Highly relevant. The replicated sensor state follows an eventual consistency model. Sensor updates are disseminated asynchronously through best-effort push-pull anti-entropy, and replicas may temporarily diverge during delays, crashes, or partitions. Convergence is obtained through a deterministic Last-Write-Wins policy based on \texttt{(ts\_ms, origin)}, so nodes that receive the same set of updates eventually expose the same winning sensor records.
 
+This means the project does not treat transient message loss or temporary replica divergence as unacceptable in the same sense as a strongly consistent production data service would. Instead, the intended guarantee is deterministic eventual convergence once reachable nodes exchange the same update set. Because the replicated state is volatile and maintained in memory, recovery after extended outages depends on at least one sufficiently up-to-date reachable peer, so permanent loss cannot be excluded if no such peer remains available.
+
 \medskip
 \textbf{Partition tolerance.}
 Relevant. The project explicitly accepts degraded semantics during temporary communication partitions. Nodes in each connected component can continue local ingestion and observation, while replicated views may diverge. After communication is restored, gossip, delta exchange, and full-state synchronization allow reachable replicas to reconcile toward the same deterministic state.
@@ -44,6 +46,8 @@ Relevant. Nodes do not share centralized hardware resources; instead, they share
 \textbf{Openness, interoperability, and heterogeneity.}
 Relevant. The implementation separates topology policy, sensor production, runtime processing, protocol messages, replicated state, and read-only observation clients. The topology layer is policy-driven, so the connection strategy can be injected or replaced without changing the rest of the runtime; in the current implementation, the supported production policy is the full-mesh policy. Sensor behavior is also modular: sensor providers are instantiated from configuration and deliver readings through a common ingestion boundary, allowing additional producers or adapters to be introduced while preserving the same downstream replication and observability pipeline. This makes the system open to heterogeneous sensor sources and alternative topology strategies, although the current project focuses on simulated local sensors rather than external industrial sensor protocols.
 
+The system is also designed to interoperate with external components at clear boundaries. In particular, browser-based dashboards, generic HTTP clients, automated test scripts, and containerized deployment tooling interact with the same exposed observation surfaces, while node-to-node communication remains separated behind the internal TCP/JSON protocol.
+
 \medskip
 \textbf{Evolvability and maintainability.}
 Highly relevant. The project is organized into explicit modules for runtime orchestration, networking, protocol handling, membership, failure detection, gossip, replicated state, sensors, topology, web API, and dashboard support. This separation is important because the platform demonstrates several distributed-systems concerns at once and must remain understandable enough to validate, debug, and extend.
@@ -52,13 +56,19 @@ Highly relevant. The project is organized into explicit modules for runtime orch
 \textbf{Performance, concurrency, and communication efficiency.}
 Relevant, but not subject to hard real-time constraints. Each node runs concurrent activities such as sensor production, state processing, heartbeat exchange, membership gossip, push-pull replication, TCP request handling, and HTTP polling. Communication efficiency matters because excessive pull traffic or insufficient delta retention can obscure convergence behavior. The implementation therefore exposes tuning parameters for gossip cadence, push and pull fanout, pull frequency, and replication-delta buffer size. The target is stable experimental behavior, not strict latency guarantees.
 
+Accordingly, the project does not impose strict response-time or throughput requirements, nor does it define service-level guarantees. Timing behavior is intentionally parameter-dependent and should be understood as acceptable for small and medium course-project deployments rather than as a hard real-time commitment.
+
 \medskip
 \textbf{Security and trust.}
 Limited in the current scope. The platform is designed for trusted local or laboratory environments, not adversarial multi-tenant deployments. It does not currently provide authentication, authorization, transport encryption, Byzantine fault tolerance, or protection against malicious peers. Security hardening would be a future extension rather than a core design driver of the present implementation.
 
+This limited scope is also consistent with the nature of the handled information: the project does not process personal, sensitive, or confidential application data, but only simulated sensor readings and technical runtime metadata such as membership state, topology views, metrics, introspection events, and logs. Multiple conceptual roles exist, such as technical operators, observers, and automated tools, but the implementation does not enforce differentiated permissions because the exposed HTTP interfaces are read-only and unauthenticated.
+
 \medskip
 \textbf{Economy and cost.}
 Relevant as an implementation constraint. The system is expected to run on ordinary development machines using repository-provided artifacts, Python dependencies, and Docker Compose topologies. It does not require paid cloud infrastructure, managed services, or institution-provided deployment platforms. This supports reproducibility, portability, and low-cost course evaluation.
+
+Minimizing resource usage is therefore a secondary concern rather than a primary optimization target. Bounded buffers, configurable fanout, and limited experimental scale are useful to avoid unnecessary saturation, but the dominant objective remains understandable, reproducible distributed behavior on commodity hardware.
 
 \subsection{Glossary}
 \label{glossary}
@@ -99,14 +109,14 @@ Given at least one configured sensor on a node, the node eventually exposes fres
 
 \medskip
 \textbf{FR3 -- Cluster-wide sensor-state dissemination.}
-The system shall propagate sensor updates among nodes through decentralized peer-to-peer replication, including push-pull anti-entropy exchanges, so that readings produced on one node become visible on other reachable nodes.
+The system shall propagate sensor updates among nodes through decentralized replication so that readings produced on one node become visible on other reachable nodes.
 
 \textbf{Acceptance criterion.}
 If a node generates new sensor readings while communication paths to other nodes are available, those readings eventually appear in the replicated sensor-state view exposed by the other reachable nodes.
 
 \medskip
 \textbf{FR4 -- Deterministic timestamp-based conflict resolution.}
-The system shall resolve concurrent or conflicting updates using a deterministic timestamp-based merge policy (Last-Write-Wins with deterministic tie-breaking) so that replicas can converge to the same winning value for each sensor record.
+The system shall resolve concurrent or conflicting updates through a deterministic merge policy so that replicas can converge to the same winning value for each sensor record.
 
 \textbf{Acceptance criterion.}
 When two or more updates compete for the same logical sensor record, all nodes that receive the same set of updates eventually expose the same winner for that record.
@@ -120,14 +130,14 @@ After startup and sufficient message exchange, a node exposes a membership view 
 
 \medskip
 \textbf{FR6 -- Adaptive liveness observation.}
-The system shall provide operators with a node-local assessment of peer liveness based on heartbeat behavior and an adaptive failure detector so that missing or degraded peers can be observed during experiments.
+The system shall provide operators with a node-local assessment of peer liveness so that missing or degraded peers can be observed during experiments.
 
 \textbf{Acceptance criterion.}
 If a known peer becomes unreachable for long enough, at least one observing node eventually reports that peer as \texttt{suspected} or \texttt{dead} in its membership/introspection output.
 
 \medskip
 \textbf{FR7 -- Recovery after crashes or temporary disconnections.}
-The system shall allow a node that restarts or reconnects after temporary unavailability to recover the replicated state needed to rejoin normal operation by synchronizing with reachable peers. Recovery is based on exchanged delta information and full-state synchronization, not on durable local persistence.
+The system shall allow a node that restarts or reconnects after temporary unavailability to recover the replicated state needed to rejoin normal operation by synchronizing with reachable peers.
 
 \textbf{Acceptance criterion.}
 After a node crash or temporary isolation, once communication with at least one sufficiently up-to-date peer is restored, the recovering node eventually exposes a replicated state aligned with the rest of the reachable cluster.
@@ -141,24 +151,27 @@ A client can query documented HTTP \texttt{GET} endpoints and obtain structured 
 
 \medskip
 \textbf{FR9 -- Push-pull anti-entropy exchange.}
-The replication layer shall support push-pull anti-entropy exchanges between peers so that each side can both advertise local updates and request missing information.
+\textbf{FR9 -- Bidirectional replication synchronization.}
+The replication layer shall support bidirectional synchronization between reachable peers so that each side can both advertise local updates and obtain missing information.
 
 \textbf{Acceptance criterion.}
 During normal operation, reachable peers can send delta updates and request missing updates from one another, so each node can obtain sensor records it does not yet store.
 
 \medskip
 \textbf{FR10 -- Phi Accrual failure suspicion output.}
-The membership subsystem shall expose liveness states derived from a Phi Accrual Failure Detector, allowing operators to distinguish peers reported as \texttt{alive}, \texttt{suspected}, or \texttt{dead}.
+\textbf{FR10 -- Liveness state exposure.}
+The membership subsystem shall expose liveness states allowing operators to distinguish peers reported as \texttt{alive}, \texttt{suspected}, or \texttt{dead}.
 
 \textbf{Acceptance criterion.}
-If heartbeat arrival patterns from a peer degrade or stop, phi-based suspicion eventually crosses the configured thresholds and the peer is reported as \texttt{suspected} or \texttt{dead} in membership/introspection output.
+If liveness evidence from a peer degrades or stops for long enough, that peer is eventually reported as \texttt{suspected} or \texttt{dead} in membership/introspection output.
 
 \medskip
 \textbf{FR11 -- Full-state rejoin synchronization.}
-When a node rejoins after crash, restart, or long partition, it shall support full-state synchronization from reachable peers to rebuild a coherent in-memory replica when incremental recovery is insufficient.
+\textbf{FR11 -- Rejoin state reconstruction.}
+When a node rejoins after crash, restart, or long partition, it shall support recovery of a coherent replica from reachable peers even when incremental synchronization alone is insufficient.
 
 \textbf{Acceptance criterion.}
-After prolonged unavailability, a rejoining node can request and apply a full sensor-state snapshot from a reachable peer and eventually align with the reachable cluster state, assuming such a peer still holds the relevant state.
+After prolonged unavailability, a rejoining node can recover a sufficiently complete sensor-state view from a reachable peer and eventually align with the reachable cluster state, assuming such a peer still holds the relevant state.
 
 \medskip
 \textbf{FR12 -- Human-oriented monitoring support.}
@@ -206,10 +219,10 @@ Using the documented setup and provided Docker Compose topologies, an operator c
 
 \medskip
 \textbf{NFR6 -- Extensibility of sensor sources.}
-The system shall be open to additional sensor producers without changing the conceptual role of the rest of the distributed runtime. This extensibility is architectural rather than dynamic: adding a new built-in sensor type may still require code and configuration mapping in the sensor manager.
+The system shall be open to additional sensor producers without changing the conceptual role of the rest of the distributed runtime.
 
 \textbf{Acceptance criterion.}
-New sensor sources can be introduced as additional producers while preserving the same downstream ingestion, replication, and observation capabilities; the platform does not require a live plugin hot-swap mechanism for this requirement.
+New sensor sources can be introduced as additional producers while preserving the same downstream ingestion, replication, and observation capabilities.
 
 \medskip
 \textbf{NFR7 -- Operational scalability at course-project scale.}
