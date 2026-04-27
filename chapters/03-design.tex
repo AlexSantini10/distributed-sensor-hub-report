@@ -106,7 +106,7 @@ The lifetime of this information is intentionally volatile. Replicated sensor wi
 
 There are two main interaction families in the system.
 
-The first is \textbf{peer-to-peer interaction among nodes}. This interaction is best-effort, message-based, and decoupled through protocol dispatch. It is used for:
+The first is \textbf{peer-to-peer interaction among nodes}. This interaction is best-effort, message-based, and decoupled through protocol dispatch. It runs over TCP with client-side retry/queue behavior, but without end-to-end application-level delivery guarantees. It is used for:
 \begin{itemize}
   \item bootstrap and peer discovery;
   \item heartbeat exchange;
@@ -115,18 +115,18 @@ The first is \textbf{peer-to-peer interaction among nodes}. This interaction is 
   \item recovery synchronization after missed updates.
 \end{itemize}
 
-The second is \textbf{observer interaction}, where external clients query a node through the HTTP read API. This interaction is request-response and read-only. It does not participate in cluster coordination and it never mutates the distributed state.
+The second is \textbf{observer interaction}, where external clients query a node through the HTTP read API. This interaction is request-response and read-only. In practice, the dashboard mainly relies on polling of \texttt{/api/introspection}, alongside other legacy read-only endpoints. It does not participate in cluster coordination and it never mutates the distributed state.
 
 At the inter-node level, communication follows a layered path:
 \begin{quote}
-\emph{domain intent} $\rightarrow$ \emph{protocol message} $\rightarrow$ \emph{transport delivery} $\rightarrow$ \emph{protocol dispatch} $\rightarrow$ \emph{domain update}
+\emph{domain intent} $\rightarrow$ \emph{protocol message} $\rightarrow$ \emph{transport delivery} $\rightarrow$ \emph{Message.decode} $\rightarrow$ \emph{MessageDispatcher} $\rightarrow$ \emph{handler} $\rightarrow$ \emph{domain update}
 \end{quote}
 
 The main interaction patterns are:
 \begin{itemize}
   \item \textbf{bootstrap and peer-list exchange}, used when a node joins and needs initial peer knowledge;
   \item \textbf{periodic heartbeat exchange}, used to collect liveness evidence;
-  \item \textbf{gossip dissemination}, used to spread membership knowledge without central coordination;
+  \item \textbf{gossip dissemination}, used mainly to spread membership and liveness knowledge without central coordination;
   \item \textbf{push-pull state synchronization}, used to exchange recent sensor-state updates efficiently;
   \item \textbf{full synchronization on demand}, used when incremental recovery is insufficient;
   \item \textbf{polling-based observation}, used by the dashboard and external tools to inspect cluster state.
