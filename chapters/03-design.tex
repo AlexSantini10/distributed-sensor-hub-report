@@ -241,7 +241,7 @@ Each node acts as a locally available observation point. As long as a node remai
   \item expose read-only snapshots to operators and tools.
 \end{itemize}
 
-In this sense, replicated state itself plays a role analogous to availability-oriented caching: each node keeps a local working copy of shared cluster knowledge, so read operations do not require contacting a central authority.
+In this sense, replicated state itself plays a role analogous to availability-oriented caching: each node keeps a local, eventually convergent working copy of shared cluster knowledge, so read operations do not require contacting a central authority.
 
 No explicit load balancing is required because there is no single mandatory ingress point for observation. Different observers may query different nodes, and each node exposes its own local view. This is sufficient for the intended scale of the project.
 
