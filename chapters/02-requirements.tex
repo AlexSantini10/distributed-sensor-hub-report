@@ -204,33 +204,33 @@ The documented deployment can be instantiated with multi-node topologies, such a
 \subsection{Implementation Constraints}
 \label{implementation-constraints}
 
-\textbf{IR1 -- Self-contained local deployment.}
+\textbf{IR1 -- Python-based implementation.}
+The project shall be implemented in Python.
+
+\textbf{Justification.}
+Python is well suited to a distributed-systems project of this scale because it enables rapid development, readable code, and direct use of standard-library facilities for sockets, threading, HTTP serving, serialization, and testing. It also keeps the implementation accessible and easy to run on ordinary development machines.
+
+\textbf{Acceptance criterion.}
+The distributed node runtime, protocol handling, failure detection, replication logic, and observability services are implemented in Python and can be executed with the documented Python environment.
+
+\medskip
+\textbf{IR2 -- Container-based multi-node deployment support.}
+The project shall support multi-node deployment through Docker Compose.
+
+\textbf{Justification.}
+Docker Compose provides a simple and widely available way to reproduce distributed topologies, configure multiple nodes consistently, and run controlled multi-node scenarios without requiring external orchestration platforms.
+
+\textbf{Acceptance criterion.}
+An operator can launch a documented multi-node deployment using Docker Compose and obtain a running cluster with configured node identities, networking, and observability endpoints.
+
+\medskip
+\textbf{IR3 -- Self-contained execution on commodity machines.}
 The project shall be executable on commodity development machines without requiring paid cloud services, institution-managed infrastructure, or external managed services.
 
 \textbf{Justification.}
-The system is intended for course-project evaluation and distributed-systems experimentation. Its deployment model must therefore remain portable and reproducible from the repository itself.
+The project must remain easy to deploy, economically lightweight, and reproducible from the repository itself. Avoiding dependence on managed infrastructure keeps execution accessible and reduces administrative and operational overhead.
 
 \textbf{Acceptance criterion.}
 An operator can start one or more nodes using the repository code, documented dependencies, and provided deployment artifacts without provisioning external infrastructure.
-
-\medskip
-\textbf{IR2 -- Reproducible predefined topologies.}
-The project shall provide predefined multi-node deployment configurations that can be reused for demonstrations, validation, and fault-injection experiments.
-
-\textbf{Justification.}
-Validation requires repeatable cluster scenarios with stable node identities, network coordinates, sensor configurations, and observation endpoints.
-
-\textbf{Acceptance criterion.}
-An operator can launch the documented predefined topologies and obtain consistent node identities, sensor sources, peer relationships, and monitoring interfaces across repeated runs.
-
-\medskip
-\textbf{IR3 -- Course-scale experimental scope.}
-The implementation shall target small and medium experimental clusters suitable for local execution and course validation, rather than production-scale IoT deployments.
-
-\textbf{Justification.}
-The system is designed to demonstrate distributed-systems properties under controlled conditions, not to satisfy industrial-scale availability, performance, or device-management requirements.
-
-\textbf{Acceptance criterion.}
-The provided configurations and validation scenarios support representative multi-node deployments suitable for evaluating convergence, partition behavior, recovery, and observability at course-project scale.
 
 \clearpage
