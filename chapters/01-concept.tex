@@ -2,10 +2,10 @@
 
 \textbf{Product type.}
 The software is a distributed sensor-monitoring platform composed of autonomous peer-to-peer nodes and an optional web monitoring interface.
-More precisely, the project is primarily a distributed web-service platform: its main externally visible functionality is exposed through HTTP APIs served by executable, containerizable nodes. The optional HTML dashboard is only a lightweight observation client layered on top of the same APIs, while any compatible HTTP client can consume the service as well.
+More precisely, the project is primarily a distributed system of executable, containerizable nodes that communicate directly through TCP sockets to exchange sensor data, membership information, and synchronization messages. The HTTP API and optional HTML dashboard are auxiliary observability surfaces layered on top of the node runtime: they are useful for inspection and monitoring, but they are not the core of the system.
 Concretely, it combines:
 \begin{itemize}
-  \item a set of autonomous nodes that collect and replicate sensor data without a central coordinator;
+  \item a set of autonomous nodes that collect local sensor readings, communicate through TCP sockets, and replicate state without a central coordinator;
   \item an optional read-only web/introspection layer for monitoring and runtime observability.
 \end{itemize}
 
@@ -26,27 +26,26 @@ The system addresses three main usage profiles:
   \item \emph{automatic tools}, such as monitoring scripts, alerting components, integration services, or external dashboards, which consume the same read-only interfaces to exploit shared sensor and operational data without manually operating the distributed core.
 \end{itemize}
 
-Users interact with the system during deployment, routine supervision, and fault handling. Operators configure nodes and sensor connections when a sensing point is added or modified, start or restart nodes when the deployment changes, and check that the exposed APIs and peer connections are reachable. During normal operation, observers interact repeatedly through read-only HTTP endpoints such as \texttt{/api/state}, \texttt{/api/membership}, and \texttt{/api/introspection}, or through the dashboard, which polls the introspection API at regular intervals to display live state, membership, topology, events, and metrics. Additional interactions occur when failures, restarts, or network disruptions happen: operators inspect API responses, dashboard views, logs, metrics, and synchronization evidence to verify liveness transitions, recovery, and convergence. Thus, interaction is not continuous manual control of the distributed core, but periodic supervision and operational intervention around automated node-to-node communication.
+Users interact with the system during deployment, normal operation, and fault handling. Technical operators configure nodes, sensor connections, and network reachability, while information-oriented users mainly observe the running system through read-only HTTP endpoints such as \texttt{/api/state}, \texttt{/api/membership}, and \texttt{/api/introspection}, or through the dashboard. Interaction therefore continues also during ordinary operation, even if the distributed core runs autonomously.
 
-The intended users are trusted operators and observers working on a development machine, Docker host, or controlled laboratory network. In the provided experimental setup, nodes run either as local Python processes or as Docker containers, while users access the exposed HTTP ports from the host machine through a browser, command-line HTTP clients, automated test harnesses, or the static dashboard. Therefore, the project is best understood as a reproducible distributed-systems experiment rather than as a public cloud service for external end users.
+The intended users are trusted operators and observers working on a development machine, Docker host, or controlled laboratory network. Nodes run as local Python processes or Docker containers, while users access the exposed HTTP ports through browsers, command-line clients, automated tests, or the static dashboard. The project is therefore best understood as a reproducible distributed-systems experiment rather than as a public cloud service.
 
-The system does not manage personal user data or application-level user records. Consequently, there is no need to store user data anywhere. The handled information is instead technical runtime data, such as sensor values, node metadata, membership state, metrics, and observability data.
+The system does not manage personal user data or application-level user records. It only handles technical runtime data such as sensor values, node metadata, membership state, metrics, and observability data.
 
 Interaction channels and devices:
 \begin{itemize}
-  \item HTTP API for programmatic interaction, monitoring, and integration with external tools;
+  \item internal TCP socket communication for node-to-node coordination, replication, and membership exchange;
+  \item HTTP API for programmatic monitoring and integration with external observability tools;
   \item automatic monitoring, alerting, or integration tools consuming read-only API data;
   \item desktop/laptop web browser for optional dashboard-based monitoring.
 \end{itemize}
 
 \textbf{Why distribution is needed.}
-Distribution is a core requirement, not an implementation detail:
-\begin{itemize}
-  \item sensing points are geographically and logically distributed;
-  \item no single coordinator should be required for normal operation;
-  \item communication delays, crashes, and temporary partitions must be tolerated;
-  \item node-local views must eventually realign after faults are resolved.
-\end{itemize}
+Distribution is a core requirement, not an implementation detail. Sensing points are geographically and logically distributed, so data is naturally produced at different nodes rather than at a single central site. Each node contributes local observations and shares them with peers, allowing the system to build a replicated global view without relying on a permanent coordinator.
+
+Distribution is also needed for resource sharing and fault tolerance. Nodes share sensor state, membership knowledge, topology information, and replication metadata through peer-to-peer communication, while remaining able to operate autonomously if other peers become unreachable. This allows the system to continue local ingestion and observation during crashes or temporary partitions, and to converge again when communication is restored.
+
+Finally, distribution is essential because the project is meant to expose real distributed-systems behavior, including delay, partial failure, recovery, and eventual consistency. These aspects are part of the project goals and must be observable rather than hidden behind a centralized architecture.
 
 The detailed behavioral requirements, protocol constraints, and acceptance criteria are specified in \cref{requirements}.
 
