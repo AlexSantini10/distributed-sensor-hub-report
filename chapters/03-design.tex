@@ -210,11 +210,15 @@ Fault tolerance is one of the central design drivers of the project. The first m
 
 The second mechanism is \textbf{heartbeat-based liveness observation}. Nodes periodically exchange liveness probes and evaluate the timing of received heartbeats. This allows each node to form a local judgement about whether a peer is alive, suspected, or dead. Since such knowledge is local and timing-dependent, the design treats liveness as a continuously revised estimate rather than as an absolute truth.
 
+Timeout semantics are therefore handled by the interaction between the heartbeat runtime, the failure detector, and the membership subsystem: missing or delayed heartbeat evidence increases suspicion, and the resulting status change is reflected in the local membership view rather than blocking the node.
+
 The third mechanism is \textbf{membership gossip}. A node does not keep liveness knowledge only for itself; it disseminates updated membership information so that peer knowledge can propagate even when direct connectivity patterns are incomplete. This improves resilience of membership awareness and helps the system maintain a broader view of the cluster.
 
 The fourth mechanism is \textbf{anti-entropy recovery}. Incremental propagation is efficient when peers stay mostly synchronized, but it may be insufficient after outages, restart, or missed traffic. For this reason, the design includes a stronger recovery path that allows a lagging node to regain a coherent replicated view after disruption, directly supporting FR06.
 
-Retry behavior is present mainly as periodic or protocol-level reattempt rather than as a separate user-visible subsystem. Connection establishment can be retried with bounded backoff, heartbeat and replication rounds naturally re-attempt communication over time, and missed information can later be recovered through incremental synchronization or broader recovery exchanges.
+Retry behavior is present mainly as periodic or protocol-level reattempt rather than as a separate user-visible subsystem. Connection establishment can be retried with bounded backoff, heartbeat and replication rounds naturally re-attempt communication over time, and missed information can later be recovered through incremental synchronization or, when incremental deltas are no longer available, through a full synchronization exchange.
+
+Communication errors are treated as local, recoverable events. A failed send, missed heartbeat reply, or temporarily unreachable peer does not stop sensor ingestion or HTTP observation on the affected node; instead, the peer's membership status can degrade, later protocol rounds can retry communication, and synchronization can repair missed state when a route becomes available again.
 
 Error handling is intentionally failure-aware rather than failure-oblivious. If a component or peer becomes temporarily unavailable:
 \begin{itemize}
