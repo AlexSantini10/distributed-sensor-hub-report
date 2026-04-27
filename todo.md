@@ -1,0 +1,1 @@
+- [ ] Descrivere le proprietà BASE del sistema: Basically Available, Soft State, Eventual Consistency
