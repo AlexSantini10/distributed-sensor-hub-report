@@ -75,15 +75,15 @@ Minimizing resource usage is therefore a secondary concern rather than a primary
 
 The following terms are used throughout the report with the meanings adopted by this project:
 \begin{description}
-  \item[\textbf{Gossip}] Best-effort dissemination of node-local knowledge, especially membership and topology information, through periodic peer-to-peer messages.
-  \item[\textbf{Anti-entropy}] Periodic synchronization mechanism used to reduce divergence between replicas. In this project it is implemented as push-pull replication, where nodes both advertise local sensor deltas and request missing updates.
+  \item[\textbf{Gossip}] Best-effort dissemination of node-local knowledge through periodic peer-to-peer messages. In this project, the term includes both control-plane information, such as membership and topology knowledge, and sensor-state updates exchanged across nodes.
+  \item[\textbf{Anti-entropy}] Gossip-based synchronization mechanism used to reduce divergence between replicas. In this project it is implemented as push-pull replication, where nodes both advertise local sensor deltas and request missing updates.
   \item[\textbf{Phi Accrual Failure Detector}] Adaptive heartbeat-based failure detector that converts heartbeat inter-arrival timing into a suspicion score used to classify peers as \texttt{alive}, \texttt{suspected}, or \texttt{dead}.
-  \item[\textbf{Last-Writer-Wins}] Deterministic conflict-resolution policy in which the update with the greatest timestamp wins, with the origin identifier used as a deterministic tie-breaker when timestamps are equal.
+  \item[\textbf{Last-Write-Wins}] Deterministic conflict-resolution policy in which, for each logical sensor record, the update with the greatest timestamp wins, with the origin identifier used as a deterministic tie-breaker when timestamps are equal.
   \item[\textbf{Delta}] Incremental replication entry representing a sensor-state update together with sequence, origin, timestamp, value, and metadata. Deltas are retained in a bounded in-memory buffer.
   \item[\textbf{Full sync}] Complete state transfer used when a node joins, rejoins, or can no longer recover from retained deltas alone.
   \item[\textbf{Membership}] A node-local table of known peers, including network coordinates, liveness status, heartbeat evidence, phi score, and related metadata.
   \item[\textbf{Bootstrap peer}] Initially configured peer endpoint used to seed discovery and start communication with the rest of the cluster.
-  \item[\textbf{Replicated sensor state}] The node-local Last-Writer-Wins view of the latest winning sensor records known by that node.
+  \item[\textbf{Replicated sensor state}] The node-local Last-Write-Wins view of the latest winning sensor records known by that node.
   \item[\textbf{Introspection}] Read-only aggregate observation API exposing sensor state, membership, topology, events, and metrics using a stable schema.
   \item[\textbf{Topology}] Node-local or merged knowledge about graph-like relations among peers, used mainly for observability and connection policy.
   \item[\textbf{Eventual consistency}] Consistency model in which replicas may temporarily diverge, but converge after communication is restored and the same update set is exchanged.
