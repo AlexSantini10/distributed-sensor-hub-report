@@ -113,23 +113,4 @@ Validation and development are supported by:
 \textbf{Dependencies.}
 External dependencies are intentionally few. Besides development tools, the main runtime dependency is `python-dotenv`, used to simplify environment-based configuration. This minimal dependency footprint is coherent with the project's emphasis on portability, inspectability, and self-contained deployment.
 
-\subsection{Comparison with Messaging and Streaming Frameworks}
-\label{framework-comparison}
-
-One of the learning goals of the project is to compare the implemented peer-to-peer approach with established distributed messaging and streaming technologies. The system intentionally avoids adopting these frameworks as core dependencies because the educational objective is to expose the mechanisms of gossip dissemination, membership maintenance, failure suspicion, and recovery rather than delegating them to middleware.
-
-\textbf{MQTT.}
-MQTT is well suited to IoT telemetry because it offers a lightweight publish/subscribe abstraction and a broker-centered communication model. It would simplify sensor ingestion and client distribution, but the broker would become an explicit infrastructural dependency and, unless clustered externally, a possible coordination point. In comparison, Distributed Sensor Hub keeps dissemination decentralized: every node participates directly in replication and membership, which makes failures and convergence behavior more visible for experimentation. The trade-off is that this project must implement discovery, peer communication, and recovery logic itself, while MQTT would provide a simpler application-facing interface.
-
-\textbf{ZeroMQ.}
-ZeroMQ provides flexible messaging patterns and efficient socket abstractions without imposing a broker in all configurations. It could reduce the amount of low-level networking code and support several communication topologies. However, it does not by itself define a replicated sensor-state model, membership protocol, Phi Accrual failure detector, or full-state rejoin semantics. Using ZeroMQ would therefore help with transport engineering but would not replace the distributed-system logic that this project wants to study directly. The custom TCP and JSON protocol is less general, but keeps the behavior inspectable and aligned with the course goals.
-
-\textbf{Kafka.}
-Kafka provides durable logs, high-throughput ingestion, replay, and strong operational support for stream processing. It is much stronger than this prototype for production-scale persistence, ordering within partitions, and consumer coordination. At the same time, Kafka relies on a managed broker cluster and a log-centric data model. That would shift the project away from autonomous peer replicas toward a centralized streaming substrate. Distributed Sensor Hub instead sacrifices durable history and large-scale throughput in favor of node autonomy, local availability during partitions, and direct observation of eventual consistency through timestamp-based merging.
-
-\textbf{Redis Streams.}
-Redis Streams offers a compact and practical stream abstraction with consumer groups and persistence options. It would be useful for buffering sensor events and coordinating consumers in a small deployment, but it still introduces a server-side data store as a central component unless Redis is deployed and managed in a replicated configuration. The implemented system does not need an external store for normal operation: each node keeps its own runtime replica and repairs it through gossip, deltas, and full synchronization. This improves conceptual decentralization, while Redis Streams would provide stronger operational convenience and better persistence primitives.
-
-Overall, the implemented architecture is not meant to outperform these frameworks in production maturity. Its value is educational and experimental: it makes consistency, scalability, and fault-tolerance trade-offs explicit. MQTT and Redis Streams would simplify integration but introduce broker or server dependencies; ZeroMQ would improve transport flexibility but leave higher-level replication semantics to the application; Kafka would provide durable scalable streaming but change the architecture into a brokered log-based system. Distributed Sensor Hub instead prioritizes decentralized membership, anti-entropy replication, adaptive failure detection, and recovery after partitions, accepting simpler storage and course-project scale as deliberate constraints.
-
 \clearpage
