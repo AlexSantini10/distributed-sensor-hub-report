@@ -174,14 +174,17 @@ The system stores several forms of node-local runtime data:
 
 This data is primarily \textbf{runtime state}, not long-term persistent storage. The design does not require an external database because the goal is to study distributed replication and convergence of current system knowledge rather than durable business records. This keeps the architecture lightweight and self-contained, matching IR3.
 
+Therefore, the current design has no durable persistent dataset. If persistence were introduced in a future version, the natural model for sensor winners would be a key-value representation keyed by logical sensor identifier, while event and metric history would more naturally be stored as append-oriented records for later inspection.
+
 Accordingly, no component performs database queries in the present design, because no database is part of the architecture. Instead, nodes read environment-backed configuration, node-local in-memory state, and data received from peers over the inter-node protocol, while observers query read-only HTTP snapshots exposed by each node.
 
-Conceptually, the replicated sensor state behaves like a key-value map from a logical sensor identifier to the current winning record. The important property is not relational querying power, but deterministic merge semantics. For this reason, the core consistency problem is solved at the application level rather than delegated to a storage engine.
+Conceptually, the replicated sensor state behaves like a key-value map from a logical sensor identifier to the current winning record. Internally, records are indexed by logical \texttt{sensor\_id}, while API snapshots expose them using the derived \texttt{origin:sensor\_id} form so that values from different origins remain unambiguous to observers. The important property is not relational querying power, but deterministic merge semantics. For this reason, the core consistency problem is solved at the application level rather than delegated to a storage engine.
 
 Consistency is handled differently for different data types:
 \begin{itemize}
   \item \textbf{sensor state} uses eventual consistency with deterministic Last-Write-Wins conflict resolution based on timestamp and origin metadata;
   \item \textbf{membership state} also converges eventually, but it reflects local observations that may temporarily differ across nodes;
+  \item \textbf{topology state} converges eventually through gossip and uses per-node Last-Write-Wins declarations based on update timestamps, with deterministic tie-breaking for peer lists;
   \item \textbf{observability data} is inherently approximate and time-sensitive, because it represents a snapshot of changing distributed state.
 \end{itemize}
 
