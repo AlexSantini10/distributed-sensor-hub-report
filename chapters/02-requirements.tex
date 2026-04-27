@@ -94,87 +94,57 @@ The following terms are used throughout the report with the meanings adopted by 
 \subsection{Functional Requirements}
 \label{functional-requirements}
 
-\textbf{FR1 -- Multi-node autonomous operation.}
+\textbf{FR01 -- Multi-node autonomous operation.}
 The system shall allow multiple nodes to start independently and participate in the same distributed deployment without requiring a central coordinator.
 
 \textbf{Acceptance criterion.}
 When a cluster of at least two configured nodes is started, each node becomes operational as an autonomous process and exposes its local service interfaces without depending on a single master node.
 
 \medskip
-\textbf{FR2 -- Local sensor ingestion.}
+\textbf{FR02 -- Local sensor ingestion.}
 Each node shall be able to manage one or more local sensor sources or sensor connections and ingest their readings into the distributed system state.
 
 \textbf{Acceptance criterion.}
 Given at least one configured sensor on a node, the node eventually exposes fresh sensor records associated with its own origin through the read API or introspection API.
 
 \medskip
-\textbf{FR3 -- Cluster-wide sensor-state dissemination.}
-The system shall propagate sensor updates among nodes through decentralized replication so that readings produced on one node become visible on other reachable nodes.
+\textbf{FR03 -- Cluster-wide sensor-state dissemination and synchronization.}
+The system shall propagate sensor updates among nodes through decentralized peer-to-peer replication and gossip-based bidirectional synchronization so that readings produced on one node contribute to a shared replicated view and become visible on other reachable nodes.
 
 \textbf{Acceptance criterion.}
-If a node generates new sensor readings while communication paths to other nodes are available, those readings eventually appear in the replicated sensor-state view exposed by the other reachable nodes.
+If a node generates new sensor readings while communication paths to other nodes are available, those readings eventually appear in the replicated sensor-state view exposed by the other reachable nodes, and reachable peers can exchange updates in both directions so that each node can advertise local sensor changes and obtain records it does not yet store.
 
 \medskip
-\textbf{FR4 -- Deterministic timestamp-based conflict resolution.}
-The system shall resolve concurrent or conflicting updates through a deterministic merge policy so that replicas can converge to the same winning value for each sensor record.
+\textbf{FR04 -- Deterministic timestamp-based conflict resolution.}
+The system shall resolve concurrent or conflicting updates through a deterministic Last-Write-Wins merge policy so that replicas can converge to the same winning value for each logical sensor record.
 
 \textbf{Acceptance criterion.}
 When two or more updates compete for the same logical sensor record, all nodes that receive the same set of updates eventually expose the same winner for that record.
 
 \medskip
-\textbf{FR5 -- Membership discovery and peer knowledge propagation.}
-The system shall allow nodes to discover peers through bootstrap and peer-to-peer membership exchange, then maintain a distributed view of cluster membership.
+\textbf{FR05 -- Decentralized membership and liveness observation.}
+The system shall allow nodes to discover peers through bootstrap and peer-to-peer membership exchange, maintain a distributed view of cluster membership, and provide operators with a node-local assessment of peer liveness.
 
 \textbf{Acceptance criterion.}
-After startup and sufficient message exchange, a node exposes a membership view containing the peers it has discovered directly or indirectly.
+After startup and sufficient message exchange, a node exposes a membership view containing the peers it has discovered directly or indirectly; if liveness evidence from a known peer degrades or stops for long enough, at least one observing node eventually reports that peer as \texttt{suspected} or \texttt{dead} in its membership/introspection output.
 
 \medskip
-\textbf{FR6 -- Adaptive liveness observation.}
-The system shall provide operators with a node-local assessment of peer liveness so that missing or degraded peers can be observed during experiments.
+\medskip
+\textbf{FR06 -- Recovery and rejoin after failures or partitions.}
+The system shall allow a node that restarts, reconnects, or rejoins after temporary unavailability to recover the replicated state needed to resume normal operation by synchronizing with reachable peers, including cases where incremental synchronization alone is insufficient.
 
 \textbf{Acceptance criterion.}
-If a known peer becomes unreachable for long enough, at least one observing node eventually reports that peer as \texttt{suspected} or \texttt{dead} in its membership/introspection output.
+After a node crash, temporary isolation, or long partition, once communication with at least one sufficiently up-to-date peer is restored, the recovering node eventually exposes a replicated state aligned with the rest of the reachable cluster, using a more complete recovery path when incremental synchronization is not enough.
 
 \medskip
-\textbf{FR7 -- Recovery after crashes or temporary disconnections.}
-The system shall allow a node that restarts or reconnects after temporary unavailability to recover the replicated state needed to rejoin normal operation by synchronizing with reachable peers.
-
-\textbf{Acceptance criterion.}
-After a node crash or temporary isolation, once communication with at least one sufficiently up-to-date peer is restored, the recovering node eventually exposes a replicated state aligned with the rest of the reachable cluster.
-
-\medskip
-\textbf{FR8 -- Read-only observability interface.}
+\textbf{FR07 -- Read-only observability interface.}
 The system shall provide a read-only programmatic interface for observing sensor state, membership, topology-related information, events, and operational metrics.
 
 \textbf{Acceptance criterion.}
 A client can query documented HTTP \texttt{GET} endpoints and obtain structured snapshots of the node's current distributed-system view without modifying runtime state.
 
 \medskip
-\textbf{FR9 -- Push-pull anti-entropy exchange.}
-\textbf{FR9 -- Bidirectional replication synchronization.}
-The replication layer shall support bidirectional synchronization between reachable peers so that each side can both advertise local updates and obtain missing information.
-
-\textbf{Acceptance criterion.}
-During normal operation, reachable peers can send delta updates and request missing updates from one another, so each node can obtain sensor records it does not yet store.
-
-\medskip
-\textbf{FR10 -- Phi Accrual failure suspicion output.}
-\textbf{FR10 -- Liveness state exposure.}
-The membership subsystem shall expose liveness states allowing operators to distinguish peers reported as \texttt{alive}, \texttt{suspected}, or \texttt{dead}.
-
-\textbf{Acceptance criterion.}
-If liveness evidence from a peer degrades or stops for long enough, that peer is eventually reported as \texttt{suspected} or \texttt{dead} in membership/introspection output.
-
-\medskip
-\textbf{FR11 -- Full-state rejoin synchronization.}
-\textbf{FR11 -- Rejoin state reconstruction.}
-When a node rejoins after crash, restart, or long partition, it shall support recovery of a coherent replica from reachable peers even when incremental synchronization alone is insufficient.
-
-\textbf{Acceptance criterion.}
-After prolonged unavailability, a rejoining node can recover a sufficiently complete sensor-state view from a reachable peer and eventually align with the reachable cluster state, assuming such a peer still holds the relevant state.
-
-\medskip
-\textbf{FR12 -- Human-oriented monitoring support.}
+\textbf{FR08 -- Human-oriented monitoring support.}
 The system shall support human observation of the running cluster through a dashboard or equivalent visual monitoring interface.
 
 \textbf{Acceptance criterion.}
@@ -194,18 +164,18 @@ The system continues to ingest local readings, maintain local state, and serve r
 The replicated sensor state shall provide eventual, not immediate, consistency across nodes.
 
 \textbf{Acceptance criterion.}
-In the absence of new conflicting updates and after communication is restored, reachable replicas converge to the same winning values for the same sensor records.
+In the absence of new conflicting updates and after communication is restored, reachable replicas converge to the same winning values for the same sensor records, yielding a consistent shared view across nodes.
 
 \medskip
 \textbf{NFR3 -- Partition tolerance with degraded semantics.}
-The system shall remain available for local operation during temporary network partitions in experimental deployments, accepting that different partitions may temporarily diverge.
+The system shall remain available for local operation during temporary network partitions, accepting that different partitions may temporarily diverge.
 
 \textbf{Acceptance criterion.}
 During a partition, nodes in each connected component continue local ingestion and observation; after the partition heals, their replicas eventually converge again.
 
 \medskip
 \textbf{NFR4 -- Fault observability.}
-The system shall make failures and recovery visible enough to support distributed-systems experimentation and debugging.
+The system shall make failures and recovery visible enough to support operational monitoring and debugging.
 
 \textbf{Acceptance criterion.}
 Operators can inspect status changes, replication activity, and recovery evidence through exposed membership, event, or metric views.
@@ -226,10 +196,10 @@ New sensor sources can be introduced as additional producers while preserving th
 
 \medskip
 \textbf{NFR7 -- Operational scalability at course-project scale.}
-The platform shall support small and medium experimental clusters rather than only a fixed two-node demo.
+The platform shall support small and medium peer deployments rather than only a fixed two-node demo.
 
 \textbf{Acceptance criterion.}
-The documented deployment can be instantiated with multi-node topologies, such as six-node and twelve-node clusters, and still provides replicated state and observability functions for the whole experiment.
+The documented deployment can be instantiated with multi-node topologies, such as six-node and twelve-node clusters, and still provides replicated state and observability functions for the whole deployment.
 
 \subsection{Implementation Constraints}
 \label{implementation-constraints}

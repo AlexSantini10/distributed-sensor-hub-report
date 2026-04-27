@@ -62,21 +62,21 @@ Overall, automated tests cover the most important points identified in the proje
 
 More explicitly, the main test groups map to requirements as follows:
 \begin{description}
-  \item[\texttt{tests/state/test\_lww.py}] verifies Last-Writer-Wins merge behavior, stale-update rejection, tie breaking, full-state merge, partition convergence, delta buffers, and cursors. It covers FR3, FR4, FR7, FR9, FR11, NFR2, and NFR3.
-  \item[\texttt{tests/fd/} and \texttt{tests/membership/}] verify phi estimation, peer-table updates, heartbeat transitions, suspected/dead/alive recovery, gossip status merging, and membership snapshots. They cover FR5, FR6, FR10, and NFR4.
-  \item[\texttt{tests/protocol/test\_full\_sync\_handlers.py}] verifies \texttt{GET\_DELTA}, \texttt{DELTA\_UNAVAILABLE}, full-sync requests, full-sync responses, and recovery fallback. It covers FR7, FR9, FR11, and NFR2.
-  \item[\texttt{tests/protocol/test\_gossip\_state\_handlers.py}] verifies membership gossip, stale status rejection, delayed convergence after partitions, and topology merge. It covers FR5, FR6, NFR1, NFR3, and NFR4.
-  \item[\texttt{tests/runtime/test\_sensor\_update\_publisher.py}] verifies push-pull fanout, alive-peer targeting, and pull tracking. It covers FR3, FR9, NFR2, and NFR7.
-  \item[\texttt{tests/webapi/} and \texttt{tests/introspection/}] verify read-only HTTP endpoints and aggregate introspection snapshots. They cover FR8, FR10, FR12, and NFR4.
-  \item[\texttt{tests/sensors/}] verifies simulated sensor providers and sensor-manager configuration. It covers FR2 and NFR6.
-  \item[\texttt{tests/networking/}] verifies TCP framing, connection handling, concurrency, slow clients, bursts, limits, and shutdown. It covers FR1, FR3, NFR1, and NFR7.
-  \item[\texttt{tests/topology/}] verifies topology-state merge and full-mesh policy resolution. It covers FR5, FR8, NFR7, and IR3.
-  \item[\texttt{tests/integration/test\_deterministic\_state\_convergence.py}] verifies that six real in-process nodes converge to deterministic expected winners. It covers FR1, FR2, FR3, FR4, FR9, NFR1, NFR2, NFR7, and IR2.
-  \item[\texttt{tests/integration/test\_cluster\_harness.py}] verifies that the reusable cluster harness starts nodes and exposes state and membership. It covers FR1, FR5, FR8, IR1, and IR2.
-  \item[\texttt{tests/integration/test\_docker\_deterministic\_state\_convergence.py}] verifies convergence in container networking. It covers FR1, FR2, FR3, FR4, FR9, NFR2, NFR5, NFR7, IR1, and IR2.
-  \item[\texttt{tests/integration/test\_docker\_crash\_restart\_recovery.py}] verifies crash/restart recovery, state reconciliation, and membership recovery. It covers FR6, FR7, FR10, FR11, NFR3, NFR4, and NFR5.
-  \item[\texttt{tests/integration/test\_docker\_partition\_reconciliation.py}] verifies temporary network partition, divergence, healing, and reconciliation. It covers FR3, FR4, FR7, FR9, FR11, NFR2, and NFR3.
-  \item[\texttt{tests/integration/verify\_cluster.py}] performs a Docker smoke check that each node exposes replicated data from expected origins. It covers FR1, FR3, FR8, NFR5, IR1, and IR2.
+  \item[\texttt{tests/state/test\_lww.py}] verifies Last-Write-Wins merge behavior, stale-update rejection, tie breaking, full-state merge, partition convergence, delta buffers, and cursors. It covers FR03, FR04, FR06, NFR2, and NFR3.
+  \item[\texttt{tests/fd/} and \texttt{tests/membership/}] verify phi estimation, peer-table updates, heartbeat transitions, suspected/dead/alive recovery, gossip status merging, and membership snapshots. They cover FR05 and NFR4.
+  \item[\texttt{tests/protocol/test\_full\_sync\_handlers.py}] verifies \texttt{GET\_DELTA}, \texttt{DELTA\_UNAVAILABLE}, full-sync requests, full-sync responses, and recovery fallback. It covers FR03, FR06, and NFR2.
+  \item[\texttt{tests/protocol/test\_gossip\_state\_handlers.py}] verifies membership gossip, stale status rejection, delayed convergence after partitions, and topology merge. It covers FR05, NFR1, NFR3, and NFR4.
+  \item[\texttt{tests/runtime/test\_sensor\_update\_publisher.py}] verifies push-pull fanout, alive-peer targeting, and pull tracking. It covers FR03, NFR2, and NFR7.
+  \item[\texttt{tests/webapi/} and \texttt{tests/introspection/}] verify read-only HTTP endpoints and aggregate introspection snapshots. They cover FR05, FR07, FR08, and NFR4.
+  \item[\texttt{tests/sensors/}] verifies simulated sensor providers and sensor-manager configuration. It covers FR02 and NFR6.
+  \item[\texttt{tests/networking/}] verifies TCP framing, connection handling, concurrency, slow clients, bursts, limits, and shutdown. It covers FR01, FR03, NFR1, and NFR7.
+  \item[\texttt{tests/topology/}] verifies topology-state merge and full-mesh policy resolution. It covers FR05, FR07, NFR7, and IR3.
+  \item[\texttt{tests/integration/test\_deterministic\_state\_convergence.py}] verifies that six real in-process nodes converge to deterministic expected winners. It covers FR01, FR02, FR03, FR04, NFR1, NFR2, NFR7, and IR2.
+  \item[\texttt{tests/integration/test\_cluster\_harness.py}] verifies that the reusable cluster harness starts nodes and exposes state and membership. It covers FR01, FR05, FR07, IR1, and IR2.
+  \item[\texttt{tests/integration/test\_docker\_deterministic\_state\_convergence.py}] verifies convergence in container networking. It covers FR01, FR02, FR03, FR04, NFR2, NFR5, NFR7, IR1, and IR2.
+  \item[\texttt{tests/integration/test\_docker\_crash\_restart\_recovery.py}] verifies crash/restart recovery, state reconciliation, and membership recovery. It covers FR05, FR06, NFR3, NFR4, and NFR5.
+  \item[\texttt{tests/integration/test\_docker\_partition\_reconciliation.py}] verifies temporary network partition, divergence, healing, and reconciliation. It covers FR03, FR04, FR06, NFR2, and NFR3.
+  \item[\texttt{tests/integration/verify\_cluster.py}] performs a Docker smoke check that each node exposes replicated data from expected origins. It covers FR01, FR03, FR07, NFR5, IR1, and IR2.
 \end{description}
 
 The rationale of the main distributed tests is also requirement-driven. Deterministic convergence tests prove that autonomous nodes exchange finite sensor streams and converge to the same Last-Writer-Wins result, intercepting silent replication failures, incorrect fanout, or non-deterministic merge behavior. Docker convergence repeats the same idea in container networking, where DNS names, exposed ports, startup timing, and network isolation are closer to deployment conditions. Crash/restart recovery validates that a restarted node, after losing volatile in-memory state, can catch up through delta exchange or full synchronization, while surviving peers continue operating. Partition reconciliation checks that the system can remain locally available during a split, accept temporary divergence, and converge again after communication is restored. Full-sync handler tests specifically protect against the risk that stale cursors make recovery impossible, while web API and introspection tests protect the dashboard and external tools from unstable or incomplete observation contracts.
