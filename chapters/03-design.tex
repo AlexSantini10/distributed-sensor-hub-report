@@ -42,13 +42,13 @@ The only optional external-facing component is the browser dashboard, which is n
 
 The distributed deployment model is therefore the following:
 \begin{itemize}
-  \item one or more nodes can run as separate processes, containers, or machines, while distributed behavior is exercised when at least two nodes are active;
+  \item one or more nodes can run as separate processes, containers, or machines, while distributed behavior is meaningfully exercised when at least two nodes are active;
   \item each node may manage a different local set of sensor sources or sensor providers;
   \item nodes communicate directly with peers over the inter-node network;
   \item observers may connect to any node's read-only HTTP API, or use the dashboard configured to consume that API.
 \end{itemize}
 
-Component discovery is bootstrapped through a configured set of initial peers. After first contact, discovery is no longer purely static: nodes can exchange peer knowledge and extend their local membership view through join messages, peer-list exchange, membership gossip, and full-state synchronization metadata. Naming is based on stable node identifiers plus network coordinates required for communication. This choice is sufficient for the project scope because it avoids introducing centralized service-discovery infrastructure while still allowing evolving cluster knowledge, which is coherent with FR05 and NFR1.
+Peer discovery is bootstrapped through a configured set of initial peers. After first contact, discovery is no longer purely static: nodes can exchange peer knowledge and extend their local membership view through join messages, peer-list exchange, membership gossip, and full-state synchronization exchange (\texttt{FULL\_SYNC\_REQUEST}/\texttt{FULL\_SYNC\_RESPONSE}). Naming is based on stable node identifiers plus network coordinates required for communication. This choice is sufficient for the project scope because it avoids introducing centralized service-discovery infrastructure while still allowing evolving cluster knowledge, which is coherent with FR05 and NFR1.
 
 From a physical standpoint, the design does not assume geographic distribution at continental scale; however, it does assume that nodes may be distributed across separate machines or containers and may suffer message delay, temporary unreachability, or partial connectivity. This is exactly the failure model needed to study NFR2 and NFR3.
 
