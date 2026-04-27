@@ -175,27 +175,27 @@ During a partition, nodes in each connected component continue local ingestion a
 
 \medskip
 \textbf{NFR4 -- Fault observability.}
-The system shall make failures and recovery visible enough to support operational monitoring and debugging.
+The system shall expose failures, liveness transitions, and recovery behavior clearly enough to support operational monitoring and debugging.
 
 \textbf{Acceptance criterion.}
 Operators can inspect status changes, replication activity, and recovery evidence through exposed membership, event, or metric views.
 
 \medskip
-\textbf{NFR5 -- Reproducibility of experiments.}
-The platform shall support repeatable validation scenarios on development machines and course evaluation environments.
+\textbf{NFR5 -- Reproducibility of deployments and validation.}
+The platform shall support repeatable deployments and validation scenarios on development machines without relying on external managed infrastructure.
 
 \textbf{Acceptance criterion.}
-Using the documented setup and provided Docker Compose topologies, an operator can start a predefined cluster and reproduce representative convergence, partition, and recovery experiments without relying on external managed services.
+Using the documented setup and provided Docker Compose topologies, an operator can start a predefined cluster and reproduce representative convergence, partition, and recovery scenarios across repeated runs without relying on external managed services.
 
 \medskip
-\textbf{NFR6 -- Extensibility of sensor sources.}
-The system shall be open to additional sensor producers without changing the conceptual role of the rest of the distributed runtime.
+\textbf{NFR6 -- Extensibility of runtime policies and sensor sources.}
+The system shall be open to additional sensor producers and alternative topology policies without changing the conceptual role of the rest of the distributed runtime.
 
 \textbf{Acceptance criterion.}
-New sensor sources can be introduced as additional producers while preserving the same downstream ingestion, replication, and observation capabilities.
+New sensor sources or alternative topology strategies can be introduced while preserving the same downstream ingestion, replication, membership, and observation capabilities.
 
 \medskip
-\textbf{NFR7 -- Operational scalability at course-project scale.}
+\textbf{NFR7 -- Operational scalability at intended scale.}
 The platform shall support small and medium peer deployments rather than only a fixed two-node demo.
 
 \textbf{Acceptance criterion.}
