@@ -140,7 +140,7 @@ The behavior of the main components can be summarized as follows.
 
 \textbf{Sensor sources} are active components: they periodically generate local readings and inject them into the node. They are conceptually producers and do not need global knowledge.
 
-\textbf{The local state manager} is stateful and authoritative for the node's replica. It receives local and remote updates, applies deterministic merge rules, stores the current winners, and exposes snapshots to both replication and observability components. This component is central to FR02, FR03, and FR04.
+\textbf{The local state manager} is stateful and authoritative for the node's replica. More precisely, it is authoritative for local Last-Write-Wins winners and for the node's replication-delta view. It receives local and remote updates, applies deterministic merge rules, stores the current winners, and exposes snapshots to both replication and observability components. This component is central to FR02, FR03, and FR04.
 
 \textbf{The membership manager} is also stateful. It stores known peers, updates direct or indirect liveness evidence, and maintains the node's local view of cluster membership.
 
@@ -148,7 +148,7 @@ The behavior of the main components can be summarized as follows.
 
 \textbf{The heartbeat and gossip runtime} is periodic. At each round, it evaluates liveness, sends heartbeat probes, and disseminates updated membership knowledge. Its purpose is not to guarantee exact membership synchronization at every instant, but to make peer-status knowledge progressively converge.
 
-\textbf{The replication runtime} is periodic as well. It pushes recent sensor-state updates to selected peers and pulls missing updates from others. When incremental recovery is not sufficient, it can trigger a broader synchronization phase. This behavior is essential for FR03, FR06, and NFR2.
+\textbf{The replication runtime} is periodic as well. It pushes recent sensor-state updates to selected peers and pulls missing updates from others. In particular, the publisher side targets peers currently considered \texttt{alive}, while heartbeat and membership gossip activities may still attempt communication toward peers that are not currently classified as \texttt{alive}. When incremental recovery is not sufficient, it can trigger a broader synchronization phase. This behavior is essential for FR03, FR06, and NFR2.
 
 \textbf{The observability subsystem} is read-only. It collects snapshots from state, membership, topology, and event/metric providers, then publishes a coherent observation view for users and tools.
 
