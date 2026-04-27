@@ -8,7 +8,7 @@ This chapter reports the concrete technology-dependent choices used to realize t
 Two communication protocols are used, each chosen according to the interaction style required by the system.
 
 \textbf{Node-to-node communication.}
-Peer communication is implemented over \textbf{TCP}. This choice was preferred over UDP because the project needs ordered and reliable delivery of protocol payloads at the transport level, while still keeping the communication stack simple and under direct control. TCP is therefore used for:
+Peer communication is implemented over \textbf{TCP}. This choice was preferred over UDP because the project needs ordered and reliable byte-stream delivery while a connection remains healthy, while still keeping the communication stack simple and under direct control. TCP is therefore used for:
 \begin{itemize}
   \item bootstrap and peer discovery traffic;
   \item heartbeat exchange;
@@ -29,7 +29,7 @@ The main message families implemented in the peer protocol are:
 \begin{itemize}
   \item \texttt{JOIN\_REQUEST} and \texttt{PEER\_LIST} for discovery;
   \item \texttt{PING} and \texttt{PONG} for heartbeat-based liveness observation;
-  \item \texttt{GOSSIP\_STATE} for disseminating membership knowledge;
+  \item \texttt{GOSSIP\_STATE} for disseminating membership and topology knowledge;
   \item \texttt{SENSOR\_UPDATE} for push-based sensor replication;
   \item \texttt{GET\_DELTA} and \texttt{DELTA\_UNAVAILABLE} for incremental recovery;
   \item \texttt{FULL\_SYNC\_REQUEST} and \texttt{FULL\_SYNC\_RESPONSE} for stronger catch-up after disruption.
@@ -50,7 +50,7 @@ The implementation does \textbf{not} use an external database. All relevant info
 
 This is consistent with the project scope: the goal is to study replication, convergence, recovery, and observability of current distributed state, not durable long-term business storage. As a consequence, no SQL or NoSQL query layer is required. Queries are replaced by direct access to in-memory state providers, which are then exposed through the HTTP observation endpoints.
 
-From an implementation viewpoint, the most important storage choice is therefore not the selection of a database technology, but the decision to encode merge semantics explicitly in the application logic. Sensor-state convergence is implemented with deterministic Last-Writer-Wins conflict resolution based on timestamp and origin metadata, while membership and liveness views are maintained through dedicated in-memory structures updated by protocol handlers and periodic runtimes.
+From an implementation viewpoint, the most important storage choice is therefore not the selection of a database technology, but the decision to encode merge semantics explicitly in the application logic. Sensor-state convergence is implemented with deterministic Last-Write-Wins conflict resolution based on timestamp and origin metadata, while membership and liveness views are maintained through dedicated in-memory structures updated by protocol handlers and periodic runtimes.
 
 \subsection{Authentication and Authorization}
 \label{implementation-auth}
@@ -96,7 +96,7 @@ Sensor sources are implemented as pluggable local producers. The repository incl
 The transport layer is implemented with Python sockets and a custom framed TCP protocol. On the outbound side, each peer connection has its own worker and FIFO send queue; on the inbound side, a threaded TCP server accepts connections, reads framed messages, validates them, and dispatches them to protocol handlers. The implementation also includes bounded worker counts and configurable socket limits, which helps prevent unbounded resource growth in larger experiments.
 
 \textbf{HTTP observation layer.}
-The Web API is implemented with Python's `http.server` facilities, in particular a threaded HTTP server and custom request handlers. This is sufficient because the API is read-only and relatively small, so introducing a larger web framework would not provide proportionate benefits for the project scope.
+The Web API is implemented with Python's \texttt{http.server} facilities, in particular a threaded HTTP server and custom request handlers. This is sufficient because the API is read-only and relatively small, so introducing a larger web framework would not provide proportionate benefits for the project scope.
 
 \textbf{Containerization and deployment automation.}
 The project uses \textbf{Docker} and \textbf{Docker Compose} to instantiate reproducible node topologies. Multiple compose configurations are provided, including small and medium cluster layouts, so that the same codebase can be exercised under different scales and fault scenarios. Containerization strongly supports NFR5 because it reduces environmental variability across test runs and demonstrations.
@@ -111,6 +111,6 @@ Validation and development are supported by:
 \end{itemize}
 
 \textbf{Dependencies.}
-External dependencies are intentionally few. Besides development tools, the main runtime dependency is `python-dotenv`, used to simplify environment-based configuration. This minimal dependency footprint is coherent with the project's emphasis on portability, inspectability, and self-contained deployment.
+External dependencies are intentionally few. Besides development tools, the main runtime dependency is \texttt{python-dotenv}, used to simplify environment-based configuration. This minimal dependency footprint is coherent with the project's emphasis on portability, inspectability, and self-contained deployment.
 
 \clearpage
