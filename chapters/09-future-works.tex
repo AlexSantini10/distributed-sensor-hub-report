@@ -7,7 +7,7 @@ Although the project achieves its educational objectives in terms of distributed
 The first area for evolution concerns security. In the current version, the system operates in a controlled context and does not implement peer authentication, HTTP API protection, or channel encryption. A natural evolution would be to introduce:
 \begin{itemize}
   \item mutual authentication among nodes;
-  \item protection of HTTP endpoints through tokens or mTLS;
+  \item protection of HTTP endpoints through tokens or mutual TLS;
   \item stricter validation of the sender's logical identity with respect to the transport channel;
   \item authorization policies to distinguish observational and administrative roles.
 \end{itemize}
@@ -40,9 +40,10 @@ These extensions would enable deeper study of the trade-off between implementati
 
 \subsection{Experiments on larger topologies}
 
-Another natural direction concerns extending experimental scale. Current topologies already allow observation of interesting phenomena, but extending to larger clusters or more heterogeneous connectivity would make it possible to:
+Another natural direction concerns extending experimental scale. Current topologies already allow observation of interesting phenomena, but extending to larger clusters, more heterogeneous connectivity, or additional topology policies such as low-degree connection strategies would make it possible to:
 \begin{itemize}
   \item evaluate the impact of topology density on gossip traffic;
+  \item compare full-mesh behavior with lower-degree topology policies;
   \item study failure-detector sensitivity in less regular networks;
   \item compare fan-out, sync intervals, and delta-buffer sizes under higher loads;
   \item verify readability and sustainability of observability as node count grows.
