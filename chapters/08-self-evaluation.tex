@@ -25,8 +25,8 @@ The system remains a course-project prototype rather than a production-ready sma
 Larger topologies would also require a more systematic quantitative evaluation of gossip overhead, convergence latency, and failure-detector sensitivity.
 
 \textbf{Personal evaluation of contribution.}
-The most successful decisions were preserving a decentralized architecture, treating observability as a first-class concern, and validating recovery and convergence through reproducible Docker scenarios.
-The aspects that required the most iteration were balancing incremental anti-entropy with full synchronization and tuning failure detection under delayed or lossy communication. With more time, I would strengthen the quantitative evaluation, add durable snapshots, and harden security boundaries while preserving the educational transparency of the implementation.
+The most successful decisions were keeping the mandatory decentralized architecture understandable through a layered structure between the networking layer, protocol layer, and semantic modules, treating observability as a first-class concern, and validating recovery and convergence through reproducible Docker scenarios.
+The aspects that required the most iteration were balancing incremental anti-entropy with full synchronization and tuning failure detection under delayed or lossy communication. With more time, I would strengthen the quantitative evaluation, extend the system to more complex topology policies, add durable snapshots, and harden security boundaries while preserving the educational transparency of the implementation.
 
 \textbf{Group members.}
 \begin{itemize}
