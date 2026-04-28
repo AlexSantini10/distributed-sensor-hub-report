@@ -1,127 +1,91 @@
 \section{User Guide}\label{user-guide}
 
-This section describes operational system usage from the perspective of a technical user who wants to start the cluster, observe state convergence, and inspect introspection surfaces. Since the project does not expose external write capabilities, the main interaction consists of starting nodes, waiting for distributed-system evolution, and analyzing behavior through HTTP APIs and the web dashboard.
+This guide explains how to run the system, verify expected behavior, and collect evidence from the API and UI.
 
-\subsection{System startup}
+\subsection{How to use the software (instructions)}
 
-The most effective setup for demonstration is to start an already prepared Docker topology. The recommended scenario is the six-node one:
+Recommended demo setup (12 nodes), from the project root directory:
+
 \begin{verbatim}
-docker compose -f docker/docker-compose-6-nodes.yml up --build -d
+docker compose -f docker/docker-compose-12-nodes.yml up --build -d
 \end{verbatim}
 
-After startup, it is advisable to wait a few seconds so that nodes can complete bootstrap, peer-list exchange, initial heartbeats, and initial state replication. The expected effect is the progressive appearance of a shared membership view and sensor records replicated across nodes.
+Open the dashboard on any node using:
 
-To stop the cluster:
 \begin{verbatim}
-docker compose -f docker/docker-compose-6-nodes.yml down
+http://<node-ip>:<WEB_API_PORT>/ui
 \end{verbatim}
 
-\subsection{Direct API inspection}
+For the \texttt{docker/docker-compose-12-nodes.yml} setup, use \texttt{http://localhost:10000/ui} (node-1).
 
-Each node exposes a read-only web API on the port defined by \texttt{WEB\_API\_PORT}. The most useful endpoints during operation are:
-\begin{itemize}
-  \item \texttt{/api/state}: snapshot of replicated sensor state;
-  \item \texttt{/api/updates}: stream or view of recent updates;
-  \item \texttt{/api/membership}: local membership view;
-  \item \texttt{/api/topology}: representation of known topology;
-  \item \texttt{/api/introspection}: aggregated snapshot according to the \texttt{introspection/v1} contract;
-  \item \texttt{/api/introspection/events}: recent control-plane events;
-  \item \texttt{/api/introspection/metrics}: counters and indicators related to replication.
+Useful API checks (example on node-1, \texttt{localhost:10000}):
+
+\begin{verbatim}
+curl http://localhost:10000/api/membership
+curl http://localhost:10000/api/state
+curl http://localhost:10000/api/introspection/metrics
+\end{verbatim}
+
+Stop the cluster:
+
+\begin{verbatim}
+docker compose -f docker/docker-compose-12-nodes.yml down
+\end{verbatim}
+
+\subsection{Expected outcomes}
+
+After startup and a short convergence interval, the expected outcomes are:
+
+\begin{itemize} 
+  \item \texttt{/api/membership}: peers visible for the active topology (12 nodes in this setup);
+  \item \texttt{/api/state}: non-empty replicated sensor state, similar across nodes;
+  \item \texttt{/api/introspection/metrics}: non-zero gossip/replication activity;
+  \item dashboard (\texttt{/ui}): topology graph, peer liveness (\texttt{alive}/\texttt{suspected}/\texttt{dead}), sensor table, and recent events rendered without extra services.
 \end{itemize}
 
-For example, in a base topology, \texttt{node-1} is normally reachable at \texttt{http://localhost:10000}. Querying the aggregated \texttt{/api/introspection} endpoint provides a useful view to verify:
-\begin{itemize}
-  \item which peers are currently considered \texttt{alive}, \texttt{suspected}, or \texttt{dead};
-  \item which sensor records are known to the queried node;
-  \item how many replication rounds and gossip messages have been observed;
-  \item whether the delta buffer is sufficient or produces \texttt{DELTA\_UNAVAILABLE}.
-\end{itemize}
+If \texttt{get\_delta\_unavailable\_total} grows continuously, the delta buffer may be too small for current load or rejoin timing.
 
-\subsection{Using the web dashboard}
+\subsection{Screenshots (report evidence)}
 
-For more convenient observation, a static dashboard is available in the \texttt{web/} directory. It requires no additional backend and consumes only the \texttt{/api/introspection} endpoint. To start it:
-\begin{verbatim}
-cd web
-python -m http.server 8080
-\end{verbatim}
+Capture screenshots from a real run of the 12-node topology.
 
-Then open \texttt{http://localhost:8080} in the browser and set the \emph{API Base URL} to the HTTP endpoint of one node, for example \texttt{http://localhost:10000}.
+\begin{figure}[p]
+  \centering
+  \IfFileExists{figures/user-guide/topology-metrics.png}{
+    \includegraphics[width=\linewidth,height=0.88\textheight,keepaspectratio]{figures/user-guide/topology-metrics.png}
+  }{
+    \fbox{\begin{minipage}[c][0.55\textheight][c]{0.95\linewidth}\centering
+    Placeholder image:\\ \texttt{figures/user-guide/topology-metrics.png}
+    \end{minipage}}
+  }
+  \caption{Topology and replication metrics after 12-node convergence.}
+  \label{fig:user-guide-topology-metrics}
+\end{figure}
 
-The dashboard provides the main analysis views:
-\begin{itemize}
-  \item graph of observed topology;
-  \item peer status and related liveness semantics;
-  \item table of replicated sensors with source and timestamp;
-  \item timeline of recent events;
-  \item synthetic metrics strip for gossip, full sync, and delta replication.
-\end{itemize}
+\begin{figure}[p]
+  \centering
+  \IfFileExists{figures/user-guide/membership-status.png}{
+    \includegraphics[width=\linewidth,height=0.88\textheight,keepaspectratio]{figures/user-guide/membership-status.png}
+  }{
+    \fbox{\begin{minipage}[c][0.55\textheight][c]{0.95\linewidth}\centering
+    Placeholder image:\\ \texttt{figures/user-guide/membership-status.png}
+    \end{minipage}}
+  }
+  \caption{Membership/liveness view (\texttt{alive}, \texttt{suspected}, \texttt{dead}).}
+  \label{fig:user-guide-membership-status}
+\end{figure}
 
-In a stable cluster, the expected outcome is a topologically coherent view, a majority of peers in \texttt{alive} state, and relatively recent sensor timestamps for high-frequency sources.
-
-The repository does not include pre-captured screenshots, because the dashboard is a live view of the current experiment. The most useful screenshots for documenting a run are the topology graph and metrics strip, the membership/status panel, and the replicated sensor table after the six-node topology has been active for at least a short convergence interval. A complementary screenshot can be taken from the browser or terminal at \texttt{http://localhost:10000/api/introspection}, showing the raw introspection snapshot consumed by the dashboard.
-
-\subsection{Interpreting key observable signals}
-
-During operation, it is useful to interpret several operational indicators:
-\begin{itemize}
-  \item if many \texttt{sensor\_update\_received} events appear with \texttt{applied:false}, the node is receiving updates already superseded by the LWW criterion;
-  \item if the \texttt{get\_delta\_unavailable\_total} counter increases, the incremental-delta buffer may be too short for current load or reconnection times;
-  \item if a peer frequently transitions from \texttt{alive} to \texttt{suspected}, the simulated network or heartbeat interval may be introducing transients visible to the failure detector;
-  \item if sensor timestamps appear too old in the UI, it is advisable to reduce pull pressure or increase \texttt{REPLICATION\_DELTA\_MAXLEN}.
-\end{itemize}
-
-The dashboard is therefore not only a demonstration tool, but also an important component for experimental diagnosis of distributed behavior.
-
-\subsection{Recommended usage scenarios}
-
-From a didactic and demonstration standpoint, the most significant scenarios are:
-\begin{itemize}
-  \item \textbf{convergence under normal conditions}: start the cluster and observe progressive state alignment;
-  \item \textbf{crash and recovery}: temporarily stop one node and verify catch-up through deltas or full sync;
-  \item \textbf{degraded network}: use delays and packet loss configured in Compose to observe effects on heartbeats and data freshness;
-  \item \textbf{observable scalability}: compare 2-node, 6-node, and 12-node topologies through the same UI.
-\end{itemize}
-
-For repeated fault-injection scenarios, the script \texttt{manual\_tests/compose\_chaos.py} is also available and useful to introduce controlled stop/restart cycles of individual services while the cluster is running.
-
-\subsection{Using an image published through release}
-
-If building the Docker image locally is not desired, it is possible to use a release generated by the continuous-delivery pipeline directly. However, a release is not created for every commit: it is produced when a version tag is assigned to a commit, for example \texttt{v1.0.0}, associated with the node image uploaded to GitHub Container Registry.
-
-The operational flow is as follows:
-\begin{enumerate}
-  \item create the version tag locally and publish it to the remote repository;
-  \item open the repository \emph{Releases} section;
-  \item select the release corresponding to the desired commit;
-  \item download attached assets, especially the example \texttt{.env} file and minimal \texttt{docker-compose};
-  \item adapt the main parameters of the \texttt{.env} file;
-  \item start the container through Compose or use the \texttt{docker run} command reported in release notes.
-\end{enumerate}
-
-An example of release publication is:
-\begin{verbatim}
-git tag v1.0.0
-git push origin v1.0.0
-\end{verbatim}
-
-A typical execution example using attached assets is:
-\begin{verbatim}
-cp docker-node.env.example docker-node.env
-docker compose -f docker-compose.release.yml up -d
-\end{verbatim}
-
-Alternatively, direct startup by digest is also available:
-\begin{verbatim}
-docker pull ghcr.io/<owner>/<repo>@sha256:<digest>
-docker run --rm -p 9000:9000 -p 10000:10000 \
-  -e NODE_ID=node-1 \
-  -e HOST=0.0.0.0 \
-  -e PORT=9000 \
-  -e WEB_API_PORT=10000 \
-  -e BOOTSTRAP_PEERS= \
-  ghcr.io/<owner>/<repo>@sha256:<digest>
-\end{verbatim}
-
-This mode is useful when rapidly running a node consistent with a specific commit on the main branch, while preserving environment reproducibility through an immutable reference to the image digest.
+\begin{figure}[p]
+  \centering
+  \IfFileExists{figures/user-guide/sensor-table.png}{
+    \includegraphics[width=\linewidth,height=0.88\textheight,keepaspectratio]{figures/user-guide/sensor-table.png}
+  }{
+    \fbox{\begin{minipage}[c][0.55\textheight][c]{0.95\linewidth}\centering
+    Placeholder image:\\ \texttt{figures/user-guide/sensor-table.png}
+    \end{minipage}}
+  }
+  \caption{Replicated sensor state with source and timestamp.}
+  \label{fig:user-guide-sensor-table}
+\end{figure}
 
 \clearpage
