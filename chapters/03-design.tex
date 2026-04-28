@@ -27,7 +27,7 @@ This layered organization keeps low-level communication concerns separate from d
 
 The infrastructure is intentionally minimal. The essential infrastructural unit is the \textbf{node process}, replicated one time for each participant in the cluster. Every node contains the same internal subsystems: sensor ingestion, local state management, peer membership handling, failure detection, TCP protocol handling, and a read-only HTTP observation interface. This homogeneous-node model simplifies deployment and supports both FR01 and NFR5, because the same runtime can be instantiated in different topologies without role specialization.
 
-In concrete terms, the current design contains only two actual software component types: distributed node processes and an optional browser dashboard client. A static file server may be used to serve dashboard assets, but it is merely accessory and not part of the distributed core.
+In concrete terms, the current design contains only two actual software component types: distributed node processes and an optional browser dashboard client. Dashboard assets are served directly by each node's HTTP service, so no separate static-file service is required.
 
 No external infrastructural component is required for normal operation. In particular, the design does not rely on:
 \begin{itemize}
@@ -38,7 +38,7 @@ No external infrastructural component is required for normal operation. In parti
   \item a dedicated monitoring backend.
 \end{itemize}
 
-The only optional external-facing component is the browser dashboard, which is not part of the distributed core and behaves as a read-only observer. It can be hosted separately because it only consumes the observation API exposed by any node.
+The only optional external-facing component is the browser dashboard, which is not part of the distributed core and behaves as a read-only observer. It is exposed directly by each node together with the observation API, and can be reached through UI routes such as \texttt{/ui} and \texttt{/dashboard}.
 
 The distributed deployment model is therefore the following:
 \begin{itemize}

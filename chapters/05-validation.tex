@@ -99,7 +99,7 @@ Alongside automated validation, manual acceptance tests were also executed, prim
 \begin{itemize}
   \item startup of base, 6-node, and 12-node Docker clusters;
   \item direct inspection of \texttt{/api/state}, \texttt{/api/membership}, \texttt{/api/introspection}, and related derived views;
-  \item use of the static dashboard in \texttt{web/} to observe topology, recent events, replication metrics, and peer status;
+  \item use of the node-served dashboard (for example \texttt{http://localhost:10000/ui}) to observe topology, recent events, replication metrics, and peer status;
   \item execution of \texttt{manual\_tests/compose\_chaos.py} to selectively stop and restart services during cluster execution.
 \end{itemize}
 
