@@ -1,27 +1,32 @@
 \section{Self-evaluation}\label{self-evaluation}
 
-This project was carried out as an individual project by Alex Santini. The following self-evaluation therefore reports the complete personal contribution to the design, implementation, validation, deployment, and documentation activities.
+This project was developed individually by Alex Santini. Accordingly, this self-evaluation reflects my full personal contribution to the design, implementation, validation, deployment, and documentation of the system.
 
 \subsection{Alex Santini}
 
 \textbf{Role in the project.}
-As the only project member, I covered the full development lifecycle: requirements analysis, protocol and architecture design, runtime implementation, testing, containerized deployment, observability support, and final report writing. This included both the distributed core and the supporting artifacts needed to reproduce multi-node experiments.
+As the sole contributor, I covered the entire development lifecycle: requirements analysis, protocol and architecture design, runtime implementation, testing, containerized deployment, observability tooling, and final report writing. This included both the distributed core and the supporting artifacts required to reproduce multi-node experiments.
 
 \textbf{Main contributions.}
-The main contribution was the design and implementation of a decentralized peer-to-peer sensor-state replicator based on autonomous nodes, TCP communication, JSON protocol messages, push-pull gossip, and timestamp-based Last-Writer-Wins merging. I also implemented the membership and failure-observation mechanisms, including heartbeat-based liveness tracking and Phi Accrual failure suspicion, together with recovery paths based on incremental deltas and full-state synchronization.
+My primary contribution was the design and implementation of a decentralized peer-to-peer sensor-state replication system based on autonomous nodes, TCP communication, JSON protocol messages, push-pull gossip, and timestamp-based Last-Writer-Wins conflict resolution.
+I also implemented membership and failure-observation mechanisms, including heartbeat-based liveness tracking and Phi Accrual failure suspicion, together with recovery paths based on incremental deltas and full-state synchronization.
 
-On the operational side, I prepared Docker Compose topologies for reproducible multi-node simulations and configured sensor profiles, bootstrap information, and fault-related parameters through environment variables. I also developed the read-only HTTP and introspection surfaces used by tests, scripts, and the optional web dashboard to observe sensor values, membership, topology, events, and replication metrics.
+From an operational perspective, I prepared Docker Compose topologies for reproducible multi-node simulations and configured sensor profiles, bootstrap data, and fault-related parameters through environment variables.
+I also developed the read-only HTTP and introspection interfaces used by tests, scripts, and the optional web dashboard to inspect sensor values, membership, topology, events, and replication metrics.
 
-Validation was another important part of the work. I developed and maintained tests for protocol handling, networking, state convergence, membership, failure detection, sensors, web APIs, Docker-based scenarios, crash/restart recovery, and partition reconciliation. These tests helped connect the intended distributed-systems properties with observable behavior in repeatable experiments.
+Validation was another major part of the project. I developed and maintained tests for protocol handling, networking, state convergence, membership, failure detection, sensors, web APIs, Docker-based scenarios, crash/restart recovery, and partition reconciliation. These tests helped map intended distributed-systems properties to observable behavior in repeatable experiments.
 
 \textbf{Product strengths.}
-The strongest aspect of the product is that the main distributed mechanisms are implemented explicitly rather than hidden behind a broker or external middleware. This makes gossip dissemination, membership propagation, failure suspicion, timestamp-based conflict resolution, and recovery behavior directly observable. The project also benefits from a reproducible deployment model, a clear separation between control plane, data plane, and observability plane, and a validation strategy that combines unit tests, integration tests, Docker scenarios, and manual observation.
+The strongest aspect of the project is that its core distributed mechanisms are implemented explicitly rather than delegated to a broker or external middleware. This makes gossip dissemination, membership propagation, failure suspicion, timestamp-based conflict resolution, and recovery behavior directly observable.
+The project also benefits from a reproducible deployment model, a clear separation between control plane, data plane, and observability plane, and a validation strategy combining unit tests, integration tests, Docker scenarios, and manual observation.
 
 \textbf{Weaknesses and limitations.}
-The system remains a course-project prototype rather than a production-ready smart-city platform. It does not implement authentication, authorization, or transport encryption; it stores runtime state in memory rather than in durable local storage; and its Last-Writer-Wins policy is deterministic but semantically simple. Larger topologies would also require more systematic quantitative evaluation of gossip overhead, convergence latency, and failure-detector sensitivity.
+The system remains a course-project prototype rather than a production-ready smart-city platform. It does not provide authentication, authorization, or transport encryption; runtime state is stored in memory rather than durable local storage; and the Last-Writer-Wins policy, while deterministic, is semantically simple.
+Larger topologies would also require a more systematic quantitative evaluation of gossip overhead, convergence latency, and failure-detector sensitivity.
 
 \textbf{Personal evaluation of contribution.}
-The most successful decisions were keeping the architecture decentralized, making observability a first-class part of the system, and validating recovery and convergence through reproducible Docker scenarios. The parts that required the most iteration were the balance between incremental anti-entropy and full synchronization, and the tuning of failure detection under delayed or lossy communication. With more time, I would strengthen the quantitative evaluation, add durable snapshots, and harden the security boundaries while preserving the educational transparency of the implementation.
+The most successful decisions were preserving a decentralized architecture, treating observability as a first-class concern, and validating recovery and convergence through reproducible Docker scenarios.
+The aspects that required the most iteration were balancing incremental anti-entropy with full synchronization and tuning failure detection under delayed or lossy communication. With more time, I would strengthen the quantitative evaluation, add durable snapshots, and harden security boundaries while preserving the educational transparency of the implementation.
 
 \textbf{Group members.}
 \begin{itemize}
