@@ -96,7 +96,6 @@ The system shall allow nodes to discover peers through bootstrap and peer-to-pee
 After startup and sufficient message exchange, a node exposes a membership view containing the peers it has discovered directly or indirectly; if liveness evidence from a known peer degrades or stops for long enough, at least one observing node eventually reports that peer as \texttt{suspected} or \texttt{dead} in its membership/introspection output.
 
 \medskip
-\medskip
 \textbf{FR06 -- Recovery and rejoin after failures or partitions.}
 The system shall allow a node that restarts, reconnects, or rejoins after temporary unavailability to recover the replicated state needed to resume normal operation by synchronizing with reachable peers, including cases where incremental synchronization alone is insufficient.
 
@@ -175,7 +174,7 @@ The documented deployment can be instantiated with multi-node topologies and pro
 The project shall be implemented in Python.
 
 \textbf{Justification.}
-Python is well suited to a distributed-systems project of this scale because it enables rapid development, readable code, and direct use of standard-library facilities for sockets, threading, HTTP serving, serialization, and testing. It also keeps the implementation accessible and easy to run on ordinary development machines.
+Python provides a practical balance of development speed, readability, and standard-library support for networking, concurrency, HTTP serving, serialization, and testing.
 
 \textbf{Acceptance criterion.}
 The distributed node runtime, protocol handling, failure detection, replication logic, and observability services are implemented in Python and can be executed with the documented Python environment.
@@ -185,7 +184,7 @@ The distributed node runtime, protocol handling, failure detection, replication 
 The project shall support multi-node deployment through Docker Compose.
 
 \textbf{Justification.}
-Docker Compose provides a simple and widely available way to reproduce distributed topologies, configure multiple nodes consistently, and run controlled multi-node scenarios without requiring external orchestration platforms.
+Docker Compose enables reproducible multi-node topologies with consistent configuration, without requiring external orchestration platforms.
 
 \textbf{Acceptance criterion.}
 An operator can launch a documented multi-node deployment using Docker Compose and obtain a running cluster with configured node identities, networking, and observability endpoints.
@@ -195,7 +194,7 @@ An operator can launch a documented multi-node deployment using Docker Compose a
 The project shall be executable on commodity development machines without requiring paid cloud services, institution-managed infrastructure, or external managed services.
 
 \textbf{Justification.}
-The project must remain easy to deploy, economically lightweight, and reproducible from the repository itself. Avoiding dependence on managed infrastructure keeps execution accessible and reduces administrative and operational overhead.
+Self-contained execution keeps deployment low-cost, accessible, and reproducible directly from repository artifacts.
 
 \textbf{Acceptance criterion.}
 An operator can start one or more nodes using the repository code, documented dependencies, and provided deployment artifacts without provisioning external infrastructure.
