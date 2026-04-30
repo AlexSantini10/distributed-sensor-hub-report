@@ -1,95 +1,62 @@
 \section{Requirements Elicitation and Analysis}\label{requirements}
 
-Requirements were elicited from the intended project goal described in \cref{concept}: build a decentralized platform for distributed sensor ingestion, replicated state propagation, fault observation, and monitoring. The elicitation process therefore focused on the observable services the platform must provide to operators and observers, on the quality attributes expected from a distributed-system prototype, and on the practical constraints imposed by course evaluation and reproducible experimentation.
+This section provides functional, non-functional, and implementation requirements for the analysed system, focusing on distributed sensor ingestion, replicated-state convergence, fault observability, and reproducible deployment.
 
 \subsection{Relevant Distributed System Features}
 \label{ds-features}
 
-Not all classical distributed-system features have the same relevance in this project. \textit{Distributed Sensor Hub} is designed as a decentralized platform for collecting, replicating, and observing sensor data across multiple peer nodes, so the most important properties are decentralization, eventual convergence, fault observability, and robustness under partial failures. Other properties, such as strong security hardening or production-scale elasticity, are intentionally outside the main scope.
+Not all distributed-system features have the same priority in this project. The primary ones are decentralization, eventual convergence, partition/failure tolerance, and observability. Production-grade security and very-large-scale elasticity are outside the current scope.
 
 \textbf{Distribution transparency.}
-Only partially relevant. The system should abstract low-level communication details, local sensor ingestion, and merge logic from observers and dashboard clients. However, it should not hide the fact that the system is distributed. Replication delay, membership evolution, topology knowledge, liveness suspicion, anti-entropy activity, and recovery after failures are expected to remain observable through the read-only API and dashboard. In this project, observability is more important than full distribution transparency.
+Partially relevant. Low-level details should be abstracted for clients, but distributed behavior must remain visible. Delays, membership evolution, liveness changes, and recovery are intentionally observable via API and dashboard.
 
 \medskip
 \textbf{Decentralization.}
-Highly relevant. Each node should be able to run the full runtime stack independently, including local sensing, state storage, membership management, failure detection, replication, and observability. Normal operation should not rely on a master process, central coordinator, broker, or external database. Bootstrap information may be used to seed communication, but it should not introduce permanent coordinators.
+Highly relevant. Each node runs the full runtime stack independently. Normal operation must not depend on a permanent master, central broker, or external shared database.
 
 \medskip
 \textbf{Fault tolerance and recoverability.}
-Highly relevant. Nodes may crash, restart, or become temporarily unreachable because of host failures, process restarts, or network disruption. Surviving nodes should continue ingesting local readings, serving read-only snapshots, exchanging updates with reachable peers, and maintaining their local membership view. A restarted or reconnected node should be able to recover missing state from reachable peers, using incremental synchronization when possible and a more complete state transfer when necessary. The system should prioritize continued local availability and eventual recovery over uninterrupted global consistency.
-
-The project does not require or guarantee a fixed recovery time. Fault detection and recovery are eventual and parameter-dependent: peer suspicion depends on heartbeat timing, failure-detector thresholds, accumulated heartbeat history, and network conditions, while state recovery depends on synchronization cadence, retained update history, and the availability of at least one sufficiently up-to-date reachable peer. These behaviors should be treated as operational expectations rather than hard real-time guarantees.
+Highly relevant. Surviving nodes must continue local operation during crashes or partitions, and reconnected nodes must recover missing state from reachable peers (delta sync when possible, fuller transfer when needed). Recovery is eventual and parameter-dependent, not real-time guaranteed.
 
 \medskip
 \textbf{Failure detection and fault observability.}
-Highly relevant. The system should derive peer-liveness assessments from heartbeat evidence and expose states such as \texttt{alive}, \texttt{suspected}, and \texttt{dead}. These states should be visible through membership and introspection endpoints, together with recent control-plane events and replication metrics. The goal is not only to tolerate failures, but also to make failure and recovery dynamics inspectable during normal operation.
+Highly relevant. Liveness is inferred from heartbeat evidence and exposed as states such as \texttt{alive}, \texttt{suspected}, and \texttt{dead}, together with events and replication metrics.
 
 \medskip
 \textbf{Consistency.}
-Highly relevant. The replicated sensor state should follow an eventual consistency model. Sensor updates are disseminated asynchronously, and replicas may temporarily diverge during delays, crashes, or partitions. Convergence should be obtained through a deterministic conflict-resolution policy so that nodes receiving the same set of updates eventually expose the same winning sensor records.
-
-This means the project does not treat transient message loss or temporary replica divergence as unacceptable in the same sense as a strongly consistent production data service would. Instead, the intended guarantee is deterministic eventual convergence once reachable nodes exchange the same update set. Because the replicated state is not required to be durable by default, recovery after extended outages may depend on at least one sufficiently up-to-date reachable peer.
+Highly relevant. The model is eventual consistency with deterministic conflict resolution: replicas may diverge temporarily but converge after exchanging the same updates. Strong immediate consistency is not a goal.
 
 \medskip
 \textbf{Partition tolerance.}
-Relevant. The project explicitly accepts degraded semantics during temporary communication partitions. Nodes in each connected component should continue local ingestion and observation, while replicated views may diverge. After communication is restored, synchronization mechanisms should allow reachable replicas to reconcile toward the same deterministic state.
+Relevant. During temporary partitions, nodes continue local ingestion/observation while replicas may diverge; after healing, synchronization reconciles reachable replicas.
 
 \medskip
 \textbf{Scalability.}
-Relevant at the intended deployment scale. Under a full-mesh topology policy, the system is naturally better suited to small and medium deployments than to very large peer networks, because each node is expected to maintain direct connectivity with all others. The architecture should therefore preserve stable convergence, membership behavior, and observability at that scale, while remaining open to alternative injectable topology policies, such as a fixed-degree strategy, that could limit per-node connectivity and support larger networks.
+Relevant at intended scale. With full-mesh connectivity, the system targets small/medium clusters; alternative injectable topology policies can support larger deployments.
 
 \medskip
 \textbf{Resource sharing.}
-Highly relevant. Nodes do not share centralized hardware resources; instead, they share distributed knowledge, which is one of the core purposes of the system. This includes replicated sensor winners, peer membership information, liveness evidence, topology-related metadata, recent protocol events, and replication counters. Coordination is achieved through message exchange and deterministic merge rules rather than through a shared database or central service.
+Highly relevant. Nodes share distributed knowledge (sensor winners, membership/liveness data, topology metadata, events, metrics) through message exchange and deterministic merge rules, not through a central store.
 
 \medskip
 \textbf{Openness, interoperability, and heterogeneity.}
-Relevant. The system architecture should separate topology policy, sensor production, runtime processing, protocol messages, replicated state, and read-only observation clients. In particular, the connection strategy should be replaceable without forcing changes to the rest of the runtime. Sensor behavior should also remain modular, so that additional producers or adapters can be introduced while preserving the same downstream replication and observability pipeline. This makes the system open to heterogeneous sensor sources and alternative topology strategies, even though the current scope focuses on simulated local sensors rather than external industrial sensor protocols.
-
-The system should also interoperate with external components at clear boundaries. In particular, browser-based dashboards, generic HTTP clients, automated scripts, and containerized deployment tooling should interact with the same exposed observation surfaces, while node-to-node communication remains separated behind the internal protocol.
+Relevant. The architecture separates sensor providers, topology policies, runtime/protocol logic, replicated state, and observation interfaces, so sensor protocols and connection policies remain replaceable. Interoperability is provided through shared read-only HTTP surfaces for dashboards, scripts, and tools.
 
 \medskip
 \textbf{Evolvability and maintainability.}
-Highly relevant. The system should be organized into explicit modules for runtime orchestration, networking, protocol handling, membership, failure detection, replication, replicated state, sensors, topology, web API, and dashboard support. This separation is important because the platform combines several distributed-systems concerns at once and must remain understandable enough to validate, debug, and extend.
+Highly relevant. The implementation should remain modular (runtime, networking, protocol, membership, replication, state, sensors, topology, API/UI) to support debugging, validation, and extension.
 
 \medskip
 \textbf{Performance, concurrency, and communication efficiency.}
-Relevant, but not subject to hard real-time constraints. Each node is expected to support concurrent activities such as sensor production, state processing, heartbeat exchange, membership dissemination, replication, TCP request handling, and HTTP polling. Communication efficiency matters because excessive synchronization traffic or insufficient retained update history can degrade convergence behavior and slow recovery. Timing and synchronization parameters should therefore remain configurable. The target is stable operational behavior, not strict latency guarantees.
-
-Accordingly, the project does not impose strict response-time or throughput requirements, nor does it define service-level guarantees. Timing behavior is intentionally parameter-dependent and should be understood as acceptable for small and medium deployments rather than as a hard real-time commitment.
+Relevant, without hard real-time targets. Nodes must support concurrent sensing, membership, replication, and API serving; timing and sync parameters should stay configurable for stable behavior. No strict latency/throughput SLA is required.
 
 \medskip
 \textbf{Security and trust.}
-Limited in the current scope. The platform is designed for trusted deployments under a single administrative domain, not adversarial multi-tenant environments. It does not currently provide authentication, authorization, transport encryption, Byzantine fault tolerance, or protection against malicious peers. Security hardening would be a future extension rather than a core design driver of the present implementation.
-
-This limited scope is also consistent with the nature of the handled information: the project does not process personal, sensitive, or confidential application data, but only simulated sensor readings and technical runtime metadata such as membership state, topology views, metrics, introspection events, and logs. Multiple conceptual roles exist, such as technical operators, observers, and automated tools, but the implementation does not enforce differentiated permissions because the exposed HTTP interfaces are read-only and unauthenticated.
+Limited in current scope. The system assumes trusted environments and does not currently provide authentication, authorization, or transport encryption. Security hardening is a future extension.
 
 \medskip
 \textbf{Economy and cost.}
-Relevant as an implementation constraint. The system is expected to run on ordinary machines using repository-provided artifacts, Python dependencies, and Docker Compose topologies. It does not require paid cloud infrastructure, managed services, or institution-provided deployment platforms. This supports portability and low-cost deployment.
-
-Minimizing resource usage is therefore a secondary concern rather than a primary optimization target. Bounded buffers, configurable fanout, and moderate deployment scale are useful to avoid unnecessary saturation, but the dominant objective remains dependable distributed behavior on commodity hardware.
-
-\subsection{Glossary}
-\label{glossary}
-
-The following terms are used throughout the report with the meanings adopted by this project:
-\begin{description}
-  \item[\textbf{Gossip}] Best-effort dissemination of node-local knowledge through periodic peer-to-peer messages. In this project, the term includes both control-plane information, such as membership and topology knowledge, and sensor-state updates exchanged across nodes.
-  \item[\textbf{Anti-entropy}] Gossip-based synchronization mechanism used to reduce divergence between replicas. In this project it is implemented as push-pull replication, where nodes both advertise local sensor deltas and request missing updates.
-  \item[\textbf{Phi Accrual Failure Detector}] Adaptive heartbeat-based failure detector that converts heartbeat inter-arrival timing into a suspicion score used to classify peers as \texttt{alive}, \texttt{suspected}, or \texttt{dead}.
-  \item[\textbf{Last-Write-Wins}] Deterministic conflict-resolution policy in which, for each logical sensor record, the update with the greatest timestamp wins, with the origin identifier used as a deterministic tie-breaker when timestamps are equal.
-  \item[\textbf{Delta}] Incremental replication entry representing a sensor-state update together with sequence, origin, timestamp, value, and metadata. Deltas are retained in a bounded in-memory buffer.
-  \item[\textbf{Full sync}] Complete state transfer used when a node joins, rejoins, or can no longer recover from retained deltas alone.
-  \item[\textbf{Membership}] A node-local table of known peers, including network coordinates, liveness status, heartbeat evidence, phi score, and related metadata.
-  \item[\textbf{Bootstrap peer}] Initially configured peer endpoint used to seed discovery and start communication with the rest of the cluster.
-  \item[\textbf{Replicated sensor state}] The node-local Last-Write-Wins view of the latest winning sensor records known by that node.
-  \item[\textbf{Introspection}] Read-only aggregate observation API exposing sensor state, membership, topology, events, and metrics using a stable schema.
-  \item[\textbf{Topology}] Node-local or merged knowledge about graph-like relations among peers, used mainly for observability and connection policy.
-  \item[\textbf{Eventual consistency}] Consistency model in which replicas may temporarily diverge, but converge after communication is restored and the same update set is exchanged.
-  \item[\textbf{Sensor provider}] Local producer that emits sensor readings into the ingestion pipeline.
-  \item[\textbf{Replication cursor}] Monotonic per-node sequence value used to request missing deltas during pull replication; it is not used for conflict resolution.
-\end{description}
+Relevant as a constraint. The project should run on commodity machines using repository artifacts and Docker Compose, without paid managed infrastructure. Cost efficiency is secondary to dependable distributed behavior.
 
 \subsection{Functional Requirements}
 \label{functional-requirements}
@@ -109,10 +76,10 @@ Given at least one configured sensor on a node, the node eventually exposes fres
 
 \medskip
 \textbf{FR03 -- Cluster-wide sensor-state dissemination and synchronization.}
-The system shall propagate sensor updates among nodes through decentralized peer-to-peer replication and gossip-based bidirectional synchronization so that readings produced on one node contribute to a shared replicated view and become visible on other reachable nodes.
+The system shall propagate sensor updates among nodes through decentralized peer-to-peer replication with bidirectional synchronization so that readings produced on one node contribute to a shared replicated view and become visible on other reachable nodes.
 
 \textbf{Acceptance criterion.}
-If a node generates new sensor readings while communication paths to other nodes are available, those readings eventually appear in the replicated sensor-state view exposed by the other reachable nodes, and reachable peers can exchange updates in both directions so that each node can advertise local sensor changes and obtain records it does not yet store.
+If a node generates new sensor readings while communication paths to other nodes are available, those readings eventually appear in the replicated sensor-state view exposed by the other reachable nodes. Reachable peers exchange updates in both directions through push/pull synchronization, so each node can advertise local changes and retrieve missing records.
 
 \medskip
 \textbf{FR04 -- Deterministic timestamp-based conflict resolution.}
@@ -199,7 +166,7 @@ New sensor sources or alternative topology strategies can be introduced while pr
 The platform shall support small and medium peer deployments rather than only a fixed two-node demo.
 
 \textbf{Acceptance criterion.}
-The documented deployment can be instantiated with multi-node topologies, such as six-node and twelve-node clusters, and still provides replicated state and observability functions for the whole deployment.
+The documented deployment can be instantiated with multi-node topologies and provides replicated-state and observability functions across the deployment. Validation is required at least on six-node clusters; twelve-node clusters are supported as a deployment target.
 
 \subsection{Implementation Constraints}
 \label{implementation-constraints}
