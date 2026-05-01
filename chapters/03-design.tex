@@ -278,6 +278,8 @@ Security is intentionally limited in the current design and assumes controlled/t
 
 Authentication and fine-grained authorization are not core architectural dependencies at this stage. Nodes exchange protocol traffic, while external clients are limited to read-only HTTP observation.
 
+No dedicated cryptographic scheme (e.g., token verification, payload encryption, or mTLS channel protection) is enforced in the current baseline design.
+
 The design remains modular enough to add stronger security controls at clear boundaries:
 \begin{itemize}
   \item node-to-node channel authentication/protection;
