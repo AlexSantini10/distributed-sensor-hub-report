@@ -4,73 +4,55 @@ This chapter explains the strategies used to meet the requirements identified du
 
 \subsection{Architecture}\label{architecture}
 
-The project uses a \textbf{hybrid architectural style} composed of two complementary levels:
-\begin{enumerate}
-  \item \textbf{Decentralized distributed peer-to-peer} at system level;
-  \item \textbf{Layered/modular architecture} at node level.
-\end{enumerate}
-
-At system level, the architecture is \textbf{symmetric P2P} with no central coordinator. Each node runs the same runtime stack and can ingest local sensor data, replicate state, exchange membership information, and expose read-only observation endpoints.
-
-\begin{figure}[htbp]
-  \centering
-  \includesvg[width=0.82\textwidth]{figures/design/dsh-architecture}
-  \caption{Inter-node connection architecture in the decentralized P2P cluster (full-mesh mode).}
-  \label{fig:dsh-p2p-architecture}
-\end{figure}
+The node architecture is organized as a \textbf{layered/modular design}. The goal is to keep transport, protocol semantics, domain logic, and observability concerns explicitly separated inside each runtime instance.
 
 At node level, the internal structure is organized into explicit layers:
 \begin{itemize}
-  \item \texttt{networking}: TCP transport, framing, connection management, retries;
-  \item \texttt{protocol}: message contracts, codec, dispatcher, handler routing;
+  \item \texttt{runtime}: component composition, lifecycle orchestration;
   \item \texttt{domain}: \texttt{membership}, \texttt{fd}, \texttt{gossip}, \texttt{state}, \texttt{topology}, \texttt{sensors};
+  \item \texttt{protocol}: message contracts, codec, dispatcher, handler routing;
   \item \texttt{observability}: \texttt{introspection} and \texttt{webapi}.
+  \item \texttt{networking}: TCP transport, framing, connection management, retries;
 \end{itemize}
 
-\begin{figure}[htbp]
+\begin{figure}[H]
   \centering
   \includesvg[width=\textwidth,height=0.78\textheight,keepaspectratio,inkscapelatex=false]{figures/design/dsh-node-layers}
   \caption{Internal layered architecture of a node runtime.}
   \label{fig:dsh-node-layers}
 \end{figure}
-\begin{figure}[htbp]
+\begin{figure}[H]
   \centering
   \includesvg[width=0.9\textwidth,keepaspectratio,inkscapelatex=false]{figures/design/dsh-introspection}
   \caption{Observability architecture: introspection and read-only API exposure path.}
   \label{fig:dsh-observability-architecture}
 \end{figure}
 
-This architecture separates transport concerns, protocol semantics, domain logic, and observability concerns while keeping node roles symmetric and fully decentralized.
+This architecture separates transport concerns, protocol semantics, domain logic, and observability concerns, improving maintainability and evolvability of the node runtime.
 \subsection{Infrastructure}\label{infrastructure}
 
-The infrastructure is intentionally minimal. The essential infrastructural unit is the \textbf{node process}, replicated one time for each participant in the cluster. Every node contains the same internal subsystems: sensor ingestion, local state management, peer membership handling, failure detection, TCP protocol handling, and a read-only HTTP observation interface. This homogeneous-node model simplifies deployment and supports both FR01 and NFR5, because the same runtime can be instantiated in different topologies without role specialization.
+The infrastructure is intentionally minimal and consists only of \textbf{peer nodes}. In the base deployment, the system runs with \(N\) homogeneous node processes. Each node embeds the same runtime stack (runtime, domain services, protocol handling, TCP networking, and observability endpoints), with no role specialization and no centralized infrastructure component.
 
-In concrete terms, the current design contains only two actual software component types: distributed node processes and an optional browser dashboard client. Dashboard assets are served directly by each node's HTTP service, so no separate static-file service is required.
-
-No external infrastructural component is required for normal operation. In particular, the design does not rely on:
+Node distribution over the network follows a symmetric P2P model:
 \begin{itemize}
-  \item a central database;
-  \item a message broker;
-  \item a coordination service;
-  \item a load balancer;
-  \item a dedicated monitoring backend.
+  \item all nodes are equivalent peers and communicate through bidirectional TCP connections;
+  \item nodes may run on a single machine (development), within the same LAN/VPC, or across different networks and hosts;
+  \item the only requirement is mutual reachability and TCP communication across configured inter-node endpoints.
 \end{itemize}
 
-The only optional external-facing component is the browser dashboard, which is not part of the distributed core and behaves as a read-only observer. It is exposed directly by each node together with the observation API, and can be reached through UI routes such as \texttt{/ui} and \texttt{/dashboard}.
+\begin{figure}[htbp]
+  \centering
+  \includesvg[width=0.82\textwidth]{figures/design/dsh-infrastructure-topology}
+  \caption{Infrastructure-level node connectivity in the base full-mesh deployment.}
+  \label{fig:dsh-infrastructure-topology}
+\end{figure}
 
-The distributed deployment model is therefore the following:
+Node discovery is bootstrap-based and membership-driven:
 \begin{itemize}
-  \item one or more nodes can run as separate processes, containers, or machines, while distributed behavior is meaningfully exercised when at least two nodes are active;
-  \item each node may manage a different local set of sensor sources or sensor providers;
-  \item nodes communicate directly with peers over the inter-node network;
-  \item observers may connect to any node's read-only HTTP API, or use the dashboard configured to consume that API.
+  \item explicit node naming (\texttt{node-1}, \texttt{node-2}, \ldots) with known \texttt{host:port};
+  \item initial bootstrap through a static seed list in configuration;
+  \item progressive discovery and cluster-view maintenance through membership/gossip exchange.
 \end{itemize}
-
-Peer discovery is bootstrapped through a configured set of initial peers. After first contact, discovery is no longer purely static: nodes can exchange peer knowledge and extend their local membership view through join messages, peer-list exchange, membership gossip, and full-state synchronization exchange (\texttt{FULL\_SYNC\_REQUEST}/\texttt{FULL\_SYNC\_RESPONSE}). Naming is based on stable node identifiers plus network coordinates required for communication. This choice is sufficient for the project scope because it avoids introducing centralized service-discovery infrastructure while still allowing evolving cluster knowledge, which is coherent with FR05 and NFR1.
-
-From a physical standpoint, the design does not assume geographic distribution at continental scale; however, it does assume that nodes may be distributed across separate machines or containers and may suffer message delay, temporary unreachability, or partial connectivity. This is exactly the failure model needed to study NFR2 and NFR3.
-
-In practice, the same design supports three relevant deployment arrangements: multiple local processes on one machine, multiple Docker containers on the same host, or separate machines within a controlled laboratory network. By contrast, the repository does not define a multi-datacenter or globally distributed deployment model. Observers and the optional dashboard may run on the host machine or on any other machine that can reach a node's HTTP API.
 
 \subsection{Modelling}\label{modelling}
 
