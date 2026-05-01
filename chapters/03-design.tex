@@ -59,7 +59,7 @@ At implementation level, the model is organized around node-local runtime compon
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=\textwidth,keepaspectratio]{figures/design/dsh-domain-model.png}
+  \includegraphics[width=0.8\textwidth,keepaspectratio]{figures/design/dsh-domain-model.png}
   \caption{Domain model of node-local components and inter-component data flow.}
   \label{fig:dsh-domain-model}
 \end{figure}
@@ -122,7 +122,42 @@ The main interaction patterns are:
   \item \textbf{polling-based observation}, used by the dashboard and external tools to inspect cluster state.
 \end{itemize}
 
-This design supports FR03, FR05, FR06, FR07, and FR08 because it combines low-coupling peer communication with an observation interface that stays orthogonal to the replicated core.
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.64\textwidth,keepaspectratio]{figures/design/interaction-bootstrap-peer-list.png}
+  \caption{Bootstrap and peer-list exchange interaction for node join.}
+  \label{fig:interaction-bootstrap-peer-list}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.64\textwidth,keepaspectratio]{figures/design/interaction-heartbeat-gossip.png}
+  \caption{Inter-node heartbeat and membership-gossip interaction.}
+  \label{fig:interaction-heartbeat-gossip}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.72\textwidth,keepaspectratio]{figures/design/interaction-delta-sync.png}
+  \caption{Incremental delta synchronization interaction.}
+  \label{fig:interaction-delta-sync}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.74\textwidth,keepaspectratio]{figures/design/interaction-full-sync-fallback.png}
+  \caption{Full synchronization fallback when incremental delta is unavailable.}
+  \label{fig:interaction-full-sync-fallback}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=1.0\textwidth,keepaspectratio]{figures/design/interaction-observer-polling-http.png}
+  \caption{Observer polling over read-only HTTP introspection endpoints.}
+  \label{fig:interaction-observer-polling-http}
+\end{figure}
+
+This design supports replication, decentralized membership/liveness, recovery, and read-only monitoring because it combines low-coupling peer communication with an observation interface that stays orthogonal to the replicated core.
 
 \subsection{Behaviour}\label{behaviour}
 
@@ -130,7 +165,7 @@ The behavior of the main components can be summarized as follows.
 
 \textbf{Sensor sources} are active components: they periodically generate local readings and inject them into the node. They are conceptually producers and do not need global knowledge.
 
-\textbf{The local state manager} is stateful and authoritative for the node's replica. More precisely, it is authoritative for local Last-Write-Wins winners and for the node's replication-delta view. It receives local and remote updates, applies deterministic merge rules, stores the current winners, and exposes snapshots to both replication and observability components. This component is central to FR02, FR03, and FR04.
+\textbf{The local state manager} is stateful and authoritative for the node's replica. More precisely, it is authoritative for local Last-Write-Wins winners and for the node's replication-delta view. It receives local and remote updates, applies deterministic merge rules, stores the current winners, and exposes snapshots to both replication and observability components. This component is central to ingestion, convergence, and deterministic conflict resolution.
 
 \textbf{The membership manager} is also stateful. It stores known peers, updates direct or indirect liveness evidence, and maintains the node's local view of cluster membership.
 
@@ -138,7 +173,7 @@ The behavior of the main components can be summarized as follows.
 
 \textbf{The heartbeat and gossip runtime} is periodic. At each round, it evaluates liveness, sends heartbeat probes, and disseminates updated membership knowledge. Its purpose is not to guarantee exact membership synchronization at every instant, but to make peer-status knowledge progressively converge.
 
-\textbf{The replication runtime} is periodic as well. It pushes recent sensor-state updates to selected peers and pulls missing updates from others. In particular, the publisher side targets peers currently considered \texttt{alive}, while heartbeat and membership gossip activities may still attempt communication toward peers that are not currently classified as \texttt{alive}. When incremental recovery is not sufficient, it can trigger a broader synchronization phase. This behavior is essential for FR03, FR06, and NFR2.
+\textbf{The replication runtime} is periodic as well. It pushes recent sensor-state updates to selected peers and pulls missing updates from others. In particular, the publisher side targets peers currently considered \texttt{alive}, while heartbeat and membership gossip activities may still attempt communication toward peers that are not currently classified as \texttt{alive}. When incremental recovery is not sufficient, it can trigger a broader synchronization phase. This behavior is essential for convergence, recovery, and partition-aware operation.
 
 \textbf{The observability subsystem} is read-only. It collects snapshots from state, membership, topology, and event/metric providers, then publishes a coherent observation view for users and tools.
 
@@ -178,7 +213,7 @@ Consistency is handled differently for different data types:
   \item \textbf{observability data} is inherently approximate and time-sensitive, because it represents a snapshot of changing distributed state.
 \end{itemize}
 
-This means the system explicitly rejects strong consistency as a primary goal. During partitions or transient delays, different nodes may expose different but still valid local views. Once communication resumes and no newer conflicting updates appear, the replicas converge. This choice is aligned with NFR2 and NFR3.
+This means the system explicitly rejects strong consistency as a primary goal. During partitions or transient delays, different nodes may expose different but still valid local views. Once communication resumes and no newer conflicting updates appear, the replicas converge. This choice is aligned with availability and partition tolerance.
 
 Data is shared among components in well-defined ways:
 \begin{itemize}
@@ -188,7 +223,7 @@ Data is shared among components in well-defined ways:
   \item the observability subsystem reads from other stores but does not modify them.
 \end{itemize}
 
-This read/write asymmetry is deliberate: observation must remain decoupled from mutation so that FR07 can be satisfied without introducing accidental feedback paths.
+This read/write asymmetry is deliberate: observation must remain decoupled from mutation without introducing accidental feedback paths.
 
 Concurrent access to local state is expected because sensor ingestion, TCP protocol handlers, replication publishing, heartbeat evaluation, and HTTP polling may run at the same time. The design therefore separates write ownership and read access. Local sensor producers do not conceptually mutate the replicated state directly: they emit readings into an ingestion path consumed by the local state manager. Remote updates and full-sync responses also enter through explicit merge operations, while observers receive snapshots rather than direct references to mutable stores.
 
@@ -196,7 +231,7 @@ The consequence is that concurrent reads and writes are allowed, but they are co
 
 \subsection{Fault-Tolerance}\label{fault-tolerance}
 
-Fault tolerance is one of the central design drivers of the project. The first mechanism is \textbf{state replication}: sensor-state knowledge is disseminated among peers so that the system does not depend on a unique owner of cluster knowledge. Replication is best-effort and decentralized, which supports NFR1 and NFR3 even though it does not provide instantaneous consistency.
+Fault tolerance is one of the central design drivers of the project. The first mechanism is \textbf{state replication}: sensor-state knowledge is disseminated among peers so that the system does not depend on a unique owner of cluster knowledge. Replication is best-effort and decentralized, preserving autonomy and partition resilience even though it does not provide instantaneous consistency.
 
 The second mechanism is \textbf{heartbeat-based liveness observation}. Nodes periodically exchange liveness probes and evaluate the timing of received heartbeats. This allows each node to form a local judgement about whether a peer is alive, suspected, or dead. Since such knowledge is local and timing-dependent, the design treats liveness as a continuously revised estimate rather than as an absolute truth.
 
@@ -204,7 +239,7 @@ Timeout semantics are therefore handled by the interaction between the heartbeat
 
 The third mechanism is \textbf{membership gossip}. A node does not keep liveness knowledge only for itself; it disseminates updated membership information so that peer knowledge can propagate even when direct connectivity patterns are incomplete. This improves resilience of membership awareness and helps the system maintain a broader view of the cluster.
 
-The fourth mechanism is \textbf{anti-entropy recovery}. Incremental propagation is efficient when peers stay mostly synchronized, but it may be insufficient after outages, restart, or missed traffic. For this reason, the design includes a stronger recovery path that allows a lagging node to regain a coherent replicated view after disruption, directly supporting FR06.
+The fourth mechanism is \textbf{anti-entropy recovery}. Incremental propagation is efficient when peers stay mostly synchronized, but it may be insufficient after outages, restart, or missed traffic. For this reason, the design includes a stronger recovery path that allows a lagging node to regain a coherent replicated view after disruption.
 
 Retry behavior is present mainly as periodic or protocol-level reattempt rather than as a separate user-visible subsystem. Connection establishment can be retried with bounded backoff, heartbeat and replication rounds naturally re-attempt communication over time, and missed information can later be recovered through incremental synchronization or, when incremental deltas are no longer available, through a full synchronization exchange.
 
@@ -242,7 +277,7 @@ During a \textbf{network partition}, the design favors continued local operation
   \item local observation remains available inside each connected component.
 \end{itemize}
 
-When the partition heals, incremental dissemination and recovery mechanisms progressively re-align the replicas. This behavior is a direct consequence of choosing availability and partition tolerance over strong consistency, and it is exactly the semantics required by NFR2 and NFR3.
+When the partition heals, incremental dissemination and recovery mechanisms progressively re-align the replicas. This behavior is a direct consequence of choosing availability and partition tolerance over strong consistency.
 
 \subsection{Security}\label{security}
 
