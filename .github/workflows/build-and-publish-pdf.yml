@@ -37,7 +37,8 @@ jobs:
         uses: xu-cheng/latex-action@v3
         with:
           root_file: distributed-systems-final-report.tex
-          args: -pdf -file-line-error -halt-on-error -interaction=nonstopmode
+          args: -pdf -shell-escape -file-line-error -halt-on-error -interaction=nonstopmode
+          extra_system_packages: inkscape
 
       - name: Verify PDF exists
         run: |
