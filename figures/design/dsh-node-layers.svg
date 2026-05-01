@@ -1,0 +1,283 @@
+<?xml version="1.0" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="632pt" height="494pt" viewBox="0.00 0.00 632 494.2">
+<g id="graph0" class="graph" transform="translate(4,490.20001220703125) scale(1)" data-name="NodeInternalLayeredArchitecture">
+
+<polygon fill="white" stroke="none" points="-4,4 -4,-490.2 628,-490.2 628,4 -4,4"/>
+
+<g id="clust1" class="cluster" data-name="cluster_node_a">
+
+<path fill="white" stroke="#2e4053" stroke-width="1.1" d="M20,-8C20,-8 292,-8 292,-8 298,-8 304,-14 304,-20 304,-20 304,-466.2 304,-466.2 304,-472.2 298,-478.2 292,-478.2 292,-478.2 20,-478.2 20,-478.2 14,-478.2 8,-472.2 8,-466.2 8,-466.2 8,-20 8,-20 8,-14 14,-8 20,-8"/>
+<text text-anchor="middle" x="156" y="-463.4" font-family="Helvetica,sans-Serif" font-size="12.00">Node A</text>
+</g>
+<g id="clust2" class="cluster" data-name="cluster_node_b">
+
+<path fill="white" stroke="#2e4053" stroke-width="1.1" d="M332,-8C332,-8 604,-8 604,-8 610,-8 616,-14 616,-20 616,-20 616,-466.2 616,-466.2 616,-472.2 610,-478.2 604,-478.2 604,-478.2 332,-478.2 332,-478.2 326,-478.2 320,-472.2 320,-466.2 320,-466.2 320,-20 320,-20 320,-14 326,-8 332,-8"/>
+<text text-anchor="middle" x="468" y="-463.4" font-family="Helvetica,sans-Serif" font-size="12.00">Node B</text>
+</g>
+<!-- a_runtime&#45;&gt;a_fd -->
+<g id="edge2" class="edge" data-name="a_runtime-&gt;a_fd">
+
+<path fill="none" stroke="#5d6d7e" stroke-width="1.3" d="M158.04,-404.5C138.88,-390.8 115.02,-373.73 95.87,-360.03"/>
+<polygon fill="#5d6d7e" stroke="#5d6d7e" stroke-width="1.3" points="155.78,-407.19 165.95,-410.16 159.85,-401.5 155.78,-407.19"/>
+<polygon fill="#5d6d7e" stroke="#5d6d7e" stroke-width="1.3" points="98.11,-357.33 87.94,-354.36 94.04,-363.02 98.11,-357.33"/>
+</g>
+<!-- a_runtime&#45;&gt;a_sensors -->
+<g id="edge4" class="edge" data-name="a_runtime-&gt;a_sensors">
+
+<path fill="none" stroke="#5d6d7e" stroke-width="1.3" d="M204.97,-400.75C210.39,-389.03 216.67,-375.44 222.08,-363.74"/>
+<polygon fill="#5d6d7e" stroke="#5d6d7e" stroke-width="1.3" points="201.93,-398.98 200.91,-409.52 208.29,-401.91 201.93,-398.98"/>
+<polygon fill="#5d6d7e" stroke="#5d6d7e" stroke-width="1.3" points="225.1,-365.55 226.12,-355 218.75,-362.61 225.1,-365.55"/>
+</g>
+<!-- a_runtime&#45;&gt;a_membership -->
+<g id="edge1" class="edge" data-name="a_runtime-&gt;a_membership">
+
+<path fill="none" stroke="#5d6d7e" stroke-width="1.3" d="M183.41,-399.87C171.41,-360.51 149.47,-292.53 135,-271 129.9,-263.42 123.29,-256.25 116.52,-249.93"/>
+<polygon fill="#5d6d7e" stroke="#5d6d7e" stroke-width="1.3" points="180.05,-400.87 186.29,-409.43 186.75,-398.84 180.05,-400.87"/>
+<polygon fill="#5d6d7e" stroke="#5d6d7e" stroke-width="1.3" points="119.26,-247.69 109.44,-243.71 114.64,-252.94 119.26,-247.69"/>
+</g>
+<!-- a_runtime&#45;&gt;a_state -->
+<g id="edge3" class="edge" data-name="a_runtime-&gt;a_state">
+
+<path fill="none" stroke="#5d6d7e" stroke-width="1.3" d="M190.13,-399.55C187.66,-360.84 183.34,-292.98 180.87,-254.26"/>
+<polygon fill="#5d6d7e" stroke="#5d6d7e" stroke-width="1.3" points="186.64,-399.7 190.77,-409.46 193.62,-399.26 186.64,-399.7"/>
+<polygon fill="#5d6d7e" stroke="#5d6d7e" stroke-width="1.3" points="184.36,-254.05 180.23,-244.3 177.37,-254.5 184.36,-254.05"/>
+</g>
+<!-- a_runtime&#45;&gt;a_topology -->
+<g id="edge5" class="edge" data-name="a_runtime-&gt;a_topology">
+
+<path fill="none" stroke="#5d6d7e" stroke-width="1.3" d="M228.83,-406.06C246.84,-392.86 266.97,-374.54 278,-352.8 294.49,-320.29 290.42,-306.88 284,-271 282.92,-264.97 281.11,-258.7 279.06,-252.8"/>
+<polygon fill="#5d6d7e" stroke="#5d6d7e" stroke-width="1.3" points="226.91,-403.13 220.72,-411.73 230.92,-408.87 226.91,-403.13"/>
+<polygon fill="#5d6d7e" stroke="#5d6d7e" stroke-width="1.3" points="282.5,-252 275.65,-243.91 275.96,-254.5 282.5,-252"/>
+</g>
+<!-- a_runtime&#45;&gt;a_gossip -->
+
+<!-- a_runtime&#45;&gt;a_gossip -->
+
+<!-- a_runtime&#45;&gt;b_runtime -->
+<!-- a_fd&#45;&gt;a_membership -->
+<g id="edge11" class="edge" data-name="a_fd-&gt;a_membership">
+
+<path fill="none" stroke="#7d8b8c" stroke-width="1.3" d="M65.53,-316.32C68.93,-299.51 74.14,-273.78 78.15,-253.92"/>
+<polygon fill="#7d8b8c" stroke="#7d8b8c" stroke-width="1.3" points="81.53,-254.86 80.08,-244.37 74.67,-253.47 81.53,-254.86"/>
+<text text-anchor="middle" x="100.64" y="-275.2" font-family="Times,serif" font-size="14.00" fill="#7d8b8c">phi status</text>
+</g>
+<!-- a_fd&#45;&gt;b_fd -->
+<!-- a_sensors&#45;&gt;a_state -->
+<g id="edge10" class="edge" data-name="a_sensors-&gt;a_state">
+
+<path fill="none" stroke="#7d8b8c" stroke-width="1.3" d="M226,-316.32C217.23,-299.27 203.73,-273.05 193.45,-253.08"/>
+<polygon fill="#7d8b8c" stroke="#7d8b8c" stroke-width="1.3" points="196.56,-251.48 188.88,-244.19 190.34,-254.68 196.56,-251.48"/>
+<text text-anchor="middle" x="243.24" y="-275.2" font-family="Times,serif" font-size="14.00" fill="#7d8b8c">local events</text>
+</g>
+<!-- a_sensors&#45;&gt;b_sensors -->
+<!-- a_membership&#45;&gt;a_protocol -->
+<g id="edge6" class="edge" data-name="a_membership-&gt;a_protocol">
+
+<path fill="none" stroke="#5d6d7e" stroke-width="1.3" d="M121.47,-199.13C143.36,-185.19 170.89,-167.65 192.75,-153.73"/>
+<polygon fill="#5d6d7e" stroke="#5d6d7e" stroke-width="1.3" points="119.67,-196.13 113.12,-204.45 123.44,-202.03 119.67,-196.13"/>
+<polygon fill="#5d6d7e" stroke="#5d6d7e" stroke-width="1.3" points="194.45,-156.8 201,-148.47 190.69,-150.89 194.45,-156.8"/>
+</g>
+<!-- a_membership&#45;&gt;b_membership -->
+<!-- a_state&#45;&gt;a_protocol -->
+<g id="edge7" class="edge" data-name="a_state-&gt;a_protocol">
+
+<path fill="none" stroke="#5d6d7e" stroke-width="1.3" d="M194.14,-195.39C200.67,-183.49 208.29,-169.6 214.82,-157.68"/>
+<polygon fill="#5d6d7e" stroke="#5d6d7e" stroke-width="1.3" points="191.28,-193.33 189.54,-203.78 197.42,-196.7 191.28,-193.33"/>
+<polygon fill="#5d6d7e" stroke="#5d6d7e" stroke-width="1.3" points="217.76,-159.59 219.5,-149.14 211.63,-156.22 217.76,-159.59"/>
+</g>
+<!-- a_state&#45;&gt;b_state -->
+<!-- a_topology&#45;&gt;a_protocol -->
+<g id="edge8" class="edge" data-name="a_topology-&gt;a_protocol">
+
+<path fill="none" stroke="#5d6d7e" stroke-width="1.3" d="M255.66,-194.49C251.07,-182.96 245.79,-169.69 241.22,-158.19"/>
+<polygon fill="#5d6d7e" stroke="#5d6d7e" stroke-width="1.3" points="252.36,-195.68 259.31,-203.68 258.87,-193.09 252.36,-195.68"/>
+<polygon fill="#5d6d7e" stroke="#5d6d7e" stroke-width="1.3" points="244.6,-157.24 237.66,-149.24 238.1,-159.83 244.6,-157.24"/>
+</g>
+<!-- a_topology&#45;&gt;b_topology -->
+<!-- a_gossip&#45;&gt;a_protocol -->
+
+<!-- a_gossip&#45;&gt;b_gossip -->
+<!-- a_protocol&#45;&gt;a_networking -->
+<g id="edge9" class="edge" data-name="a_protocol-&gt;a_networking">
+
+<path fill="none" stroke="#5d6d7e" stroke-width="1.3" d="M230,-98.59C230,-87.67 230,-75.29 230,-64.38"/>
+<polygon fill="#5d6d7e" stroke="#5d6d7e" stroke-width="1.3" points="226.5,-98.54 230,-108.54 233.5,-98.54 226.5,-98.54"/>
+<polygon fill="#5d6d7e" stroke="#5d6d7e" stroke-width="1.3" points="233.5,-64.38 230,-54.38 226.5,-64.38 233.5,-64.38"/>
+</g>
+<!-- a_protocol&#45;&gt;b_protocol -->
+<!-- a_networking&#45;&gt;b_networking -->
+<!-- a_networking&#45;&gt;b_networking -->
+<g id="edge31" class="edge" data-name="a_networking-&gt;b_networking">
+
+<path fill="none" stroke="#2e86c1" stroke-width="1.9" d="M290.37,-34C308.78,-34 329.02,-34 347.44,-34"/>
+<polygon fill="#2e86c1" stroke="#2e86c1" stroke-width="1.9" points="290.58,-30.5 280.58,-34 290.58,-37.5 290.58,-30.5"/>
+<polygon fill="#2e86c1" stroke="#2e86c1" stroke-width="1.9" points="347.29,-37.5 357.29,-34 347.29,-30.5 347.29,-37.5"/>
+<text text-anchor="middle" x="319" y="-41.2" font-family="Times,serif" font-size="14.00" fill="#2e86c1">TCP P2P</text>
+</g>
+<!-- b_runtime&#45;&gt;b_fd -->
+<g id="edge13" class="edge" data-name="b_runtime-&gt;b_fd">
+
+<path fill="none" stroke="#5d6d7e" stroke-width="1.3" d="M443.79,-403.41C430.3,-390.34 413.9,-374.45 400.38,-361.36"/>
+<polygon fill="#5d6d7e" stroke="#5d6d7e" stroke-width="1.3" points="440.91,-405.49 450.53,-409.94 445.78,-400.47 440.91,-405.49"/>
+<polygon fill="#5d6d7e" stroke="#5d6d7e" stroke-width="1.3" points="403.01,-359.03 393.39,-354.58 398.14,-364.06 403.01,-359.03"/>
+</g>
+<!-- b_runtime&#45;&gt;b_sensors -->
+<g id="edge15" class="edge" data-name="b_runtime-&gt;b_sensors">
+
+<path fill="none" stroke="#5d6d7e" stroke-width="1.3" d="M491.75,-402.53C502.17,-389.95 514.61,-374.92 525.06,-362.3"/>
+<polygon fill="#5d6d7e" stroke="#5d6d7e" stroke-width="1.3" points="489.42,-399.86 485.74,-409.79 494.81,-404.32 489.42,-399.86"/>
+<polygon fill="#5d6d7e" stroke="#5d6d7e" stroke-width="1.3" points="527.65,-364.66 531.33,-354.73 522.25,-360.2 527.65,-364.66"/>
+</g>
+<!-- b_runtime&#45;&gt;b_membership -->
+<g id="edge12" class="edge" data-name="b_runtime-&gt;b_membership">
+
+<path fill="none" stroke="#5d6d7e" stroke-width="1.3" d="M464.12,-399.84C455.09,-355.79 438.5,-276.44 435,-271 429.75,-262.83 422.51,-255.57 414.85,-249.37"/>
+<polygon fill="#5d6d7e" stroke="#5d6d7e" stroke-width="1.3" points="460.67,-400.47 466.1,-409.57 467.53,-399.07 460.67,-400.47"/>
+<polygon fill="#5d6d7e" stroke="#5d6d7e" stroke-width="1.3" points="417.09,-246.68 406.98,-243.51 412.91,-252.29 417.09,-246.68"/>
+</g>
+<!-- b_runtime&#45;&gt;b_state -->
+<g id="edge14" class="edge" data-name="b_runtime-&gt;b_state">
+
+<path fill="none" stroke="#5d6d7e" stroke-width="1.3" d="M469.86,-399.55C469.67,-360.84 469.33,-292.98 469.14,-254.26"/>
+<polygon fill="#5d6d7e" stroke="#5d6d7e" stroke-width="1.3" points="466.36,-399.47 469.91,-409.46 473.36,-399.44 466.36,-399.47"/>
+<polygon fill="#5d6d7e" stroke="#5d6d7e" stroke-width="1.3" points="472.64,-254.28 469.09,-244.3 465.64,-254.32 472.64,-254.28"/>
+</g>
+<!-- b_runtime&#45;&gt;b_topology -->
+<g id="edge16" class="edge" data-name="b_runtime-&gt;b_topology">
+
+<path fill="none" stroke="#5d6d7e" stroke-width="1.3" d="M508.38,-416C536.54,-404.35 572.76,-384.13 590,-352.8 607.55,-320.91 597.62,-305.5 586,-271 583.85,-264.63 580.66,-258.24 577.16,-252.33"/>
+<polygon fill="#5d6d7e" stroke="#5d6d7e" stroke-width="1.3" points="507.15,-412.72 499.11,-419.62 509.69,-419.24 507.15,-412.72"/>
+<polygon fill="#5d6d7e" stroke="#5d6d7e" stroke-width="1.3" points="580.14,-250.49 571.77,-244 574.26,-254.29 580.14,-250.49"/>
+</g>
+<!-- b_runtime&#45;&gt;b_gossip -->
+
+<!-- b_runtime&#45;&gt;b_gossip -->
+
+<!-- b_fd&#45;&gt;b_membership -->
+<g id="edge22" class="edge" data-name="b_fd-&gt;b_membership">
+
+<path fill="none" stroke="#7d8b8c" stroke-width="1.3" d="M374,-316.32C374,-299.59 374,-274.03 374,-254.2"/>
+<polygon fill="#7d8b8c" stroke="#7d8b8c" stroke-width="1.3" points="377.5,-254.4 374,-244.4 370.5,-254.4 377.5,-254.4"/>
+<text text-anchor="middle" x="400.64" y="-275.2" font-family="Times,serif" font-size="14.00" fill="#7d8b8c">phi status</text>
+</g>
+<!-- b_sensors&#45;&gt;b_state -->
+<g id="edge21" class="edge" data-name="b_sensors-&gt;b_state">
+
+<path fill="none" stroke="#7d8b8c" stroke-width="1.3" d="M534.47,-316.32C522.02,-298.95 502.75,-272.07 488.33,-251.97"/>
+<polygon fill="#7d8b8c" stroke="#7d8b8c" stroke-width="1.3" points="491.32,-250.12 482.65,-244.04 485.63,-254.2 491.32,-250.12"/>
+<text text-anchor="middle" x="545.24" y="-275.2" font-family="Times,serif" font-size="14.00" fill="#7d8b8c">local events</text>
+</g>
+<!-- b_membership&#45;&gt;b_protocol -->
+<g id="edge17" class="edge" data-name="b_membership-&gt;b_protocol">
+
+<path fill="none" stroke="#5d6d7e" stroke-width="1.3" d="M384.42,-194.49C388.59,-183.08 393.39,-169.96 397.56,-158.55"/>
+<polygon fill="#5d6d7e" stroke="#5d6d7e" stroke-width="1.3" points="381.22,-193.07 381.07,-203.66 387.79,-195.47 381.22,-193.07"/>
+<polygon fill="#5d6d7e" stroke="#5d6d7e" stroke-width="1.3" points="400.81,-159.86 400.96,-149.26 394.24,-157.45 400.81,-159.86"/>
+</g>
+<!-- b_state&#45;&gt;b_protocol -->
+<g id="edge18" class="edge" data-name="b_state-&gt;b_protocol">
+
+<path fill="none" stroke="#5d6d7e" stroke-width="1.3" d="M451.19,-195.84C443.26,-183.75 433.94,-169.54 425.99,-157.42"/>
+<polygon fill="#5d6d7e" stroke="#5d6d7e" stroke-width="1.3" points="448.04,-197.42 456.45,-203.86 453.89,-193.58 448.04,-197.42"/>
+<polygon fill="#5d6d7e" stroke="#5d6d7e" stroke-width="1.3" points="428.91,-155.5 420.5,-149.06 423.06,-159.34 428.91,-155.5"/>
+</g>
+<!-- b_topology&#45;&gt;b_protocol -->
+<g id="edge19" class="edge" data-name="b_topology-&gt;b_protocol">
+
+<path fill="none" stroke="#5d6d7e" stroke-width="1.3" d="M519.04,-199.31C496.4,-185.18 467.78,-167.31 445.27,-153.26"/>
+<polygon fill="#5d6d7e" stroke="#5d6d7e" stroke-width="1.3" points="516.97,-202.14 527.31,-204.47 520.68,-196.2 516.97,-202.14"/>
+<polygon fill="#5d6d7e" stroke="#5d6d7e" stroke-width="1.3" points="447.4,-150.47 437.07,-148.14 443.7,-156.41 447.4,-150.47"/>
+</g>
+<!-- b_gossip&#45;&gt;b_protocol -->
+
+<!-- b_protocol&#45;&gt;b_networking -->
+<g id="edge20" class="edge" data-name="b_protocol-&gt;b_networking">
+
+<path fill="none" stroke="#5d6d7e" stroke-width="1.3" d="M408,-98.59C408,-87.67 408,-75.29 408,-64.38"/>
+<polygon fill="#5d6d7e" stroke="#5d6d7e" stroke-width="1.3" points="404.5,-98.54 408,-108.54 411.5,-98.54 404.5,-98.54"/>
+<polygon fill="#5d6d7e" stroke="#5d6d7e" stroke-width="1.3" points="411.5,-64.38 408,-54.38 404.5,-64.38 411.5,-64.38"/>
+</g>
+<!-- a_runtime -->
+<g id="node1" class="node" pointer-events="visible" data-name="a_runtime">
+
+<path fill="none" stroke="#2e4053" d="M207,-447.8C207,-447.8 177,-447.8 177,-447.8 171,-447.8 165,-441.8 165,-435.8 165,-435.8 165,-423.8 165,-423.8 165,-417.8 171,-411.8 177,-411.8 177,-411.8 207,-411.8 207,-411.8 213,-411.8 219,-417.8 219,-423.8 219,-423.8 219,-435.8 219,-435.8 219,-441.8 213,-447.8 207,-447.8"/>
+<text text-anchor="middle" x="192" y="-426.8" font-family="Helvetica,sans-Serif" font-size="10.00">Runtime</text>
+</g>
+<!-- a_fd -->
+<g id="node2" class="node" pointer-events="visible" data-name="a_fd">
+
+<path fill="none" stroke="#2e4053" d="M95.59,-352.8C95.59,-352.8 28.41,-352.8 28.41,-352.8 22.41,-352.8 16.41,-346.8 16.41,-340.8 16.41,-340.8 16.41,-328.8 16.41,-328.8 16.41,-322.8 22.41,-316.8 28.41,-316.8 28.41,-316.8 95.59,-316.8 95.59,-316.8 101.59,-316.8 107.59,-322.8 107.59,-328.8 107.59,-328.8 107.59,-340.8 107.59,-340.8 107.59,-346.8 101.59,-352.8 95.59,-352.8"/>
+<text text-anchor="middle" x="62" y="-331.8" font-family="Helvetica,sans-Serif" font-size="10.00">Failure Detection</text>
+</g>
+<!-- a_sensors -->
+<g id="node3" class="node" pointer-events="visible" data-name="a_sensors">
+
+<path fill="none" stroke="#2e4053" d="M250,-352.8C250,-352.8 220,-352.8 220,-352.8 214,-352.8 208,-346.8 208,-340.8 208,-340.8 208,-328.8 208,-328.8 208,-322.8 214,-316.8 220,-316.8 220,-316.8 250,-316.8 250,-316.8 256,-316.8 262,-322.8 262,-328.8 262,-328.8 262,-340.8 262,-340.8 262,-346.8 256,-352.8 250,-352.8"/>
+<text text-anchor="middle" x="235" y="-331.8" font-family="Helvetica,sans-Serif" font-size="10.00">Sensors</text>
+</g>
+<!-- a_membership -->
+<g id="node4" class="node" pointer-events="visible" data-name="a_membership">
+
+<path fill="none" stroke="#2e4053" d="M107.52,-242C107.52,-242 60.48,-242 60.48,-242 54.48,-242 48.48,-236 48.48,-230 48.48,-230 48.48,-218 48.48,-218 48.48,-212 54.48,-206 60.48,-206 60.48,-206 107.52,-206 107.52,-206 113.52,-206 119.52,-212 119.52,-218 119.52,-218 119.52,-230 119.52,-230 119.52,-236 113.52,-242 107.52,-242"/>
+<text text-anchor="middle" x="84" y="-221" font-family="Helvetica,sans-Serif" font-size="10.00">Membership</text>
+</g>
+<!-- a_state -->
+<g id="node5" class="node" pointer-events="visible" data-name="a_state">
+
+<path fill="none" stroke="#2e4053" d="M194,-242C194,-242 164,-242 164,-242 158,-242 152,-236 152,-230 152,-230 152,-218 152,-218 152,-212 158,-206 164,-206 164,-206 194,-206 194,-206 200,-206 206,-212 206,-218 206,-218 206,-230 206,-230 206,-236 200,-242 194,-242"/>
+<text text-anchor="middle" x="179" y="-221" font-family="Helvetica,sans-Serif" font-size="10.00">State</text>
+</g>
+<!-- a_topology -->
+<g id="node6" class="node" pointer-events="visible" data-name="a_topology">
+
+<path fill="none" stroke="#2e4053" d="M283.64,-242C283.64,-242 250.36,-242 250.36,-242 244.36,-242 238.36,-236 238.36,-230 238.36,-230 238.36,-218 238.36,-218 238.36,-212 244.36,-206 250.36,-206 250.36,-206 283.64,-206 283.64,-206 289.64,-206 295.64,-212 295.64,-218 295.64,-218 295.64,-230 295.64,-230 295.64,-236 289.64,-242 283.64,-242"/>
+<text text-anchor="middle" x="267" y="-221" font-family="Helvetica,sans-Serif" font-size="10.00">Topology</text>
+</g>
+<!-- a_gossip -->
+
+<!-- a_protocol -->
+<g id="node7" class="node" pointer-events="visible" data-name="a_protocol">
+
+<path fill="none" stroke="#2e4053" d="M245,-147C245,-147 215,-147 215,-147 209,-147 203,-141 203,-135 203,-135 203,-123 203,-123 203,-117 209,-111 215,-111 215,-111 245,-111 245,-111 251,-111 257,-117 257,-123 257,-123 257,-135 257,-135 257,-141 251,-147 245,-147"/>
+<text text-anchor="middle" x="230" y="-126" font-family="Helvetica,sans-Serif" font-size="10.00">Protocol</text>
+</g>
+<!-- a_networking -->
+<g id="node8" class="node" pointer-events="visible" data-name="a_networking">
+
+<path fill="none" stroke="#2e4053" d="M265.36,-52C265.36,-52 194.64,-52 194.64,-52 188.64,-52 182.64,-46 182.64,-40 182.64,-40 182.64,-28 182.64,-28 182.64,-22 188.64,-16 194.64,-16 194.64,-16 265.36,-16 265.36,-16 271.36,-16 277.36,-22 277.36,-28 277.36,-28 277.36,-40 277.36,-40 277.36,-46 271.36,-52 265.36,-52"/>
+<text text-anchor="middle" x="230" y="-31" font-family="Helvetica,sans-Serif" font-size="10.00">Networking / TCP</text>
+</g>
+<g id="node9" class="node" pointer-events="visible" data-name="b_runtime" data-comment="a_networking">
+
+<path fill="none" stroke="#2e4053" d="M485,-447.8C485,-447.8 455,-447.8 455,-447.8 449,-447.8 443,-441.8 443,-435.8 443,-435.8 443,-423.8 443,-423.8 443,-417.8 449,-411.8 455,-411.8 455,-411.8 485,-411.8 485,-411.8 491,-411.8 497,-417.8 497,-423.8 497,-423.8 497,-435.8 497,-435.8 497,-441.8 491,-447.8 485,-447.8"/>
+<text text-anchor="middle" x="470" y="-426.8" font-family="Helvetica,sans-Serif" font-size="10.00">Runtime</text>
+</g><g id="node10" class="node" pointer-events="visible" data-name="b_fd" data-comment="a_networking">
+
+<path fill="none" stroke="#2e4053" d="M407.59,-352.8C407.59,-352.8 340.41,-352.8 340.41,-352.8 334.41,-352.8 328.41,-346.8 328.41,-340.8 328.41,-340.8 328.41,-328.8 328.41,-328.8 328.41,-322.8 334.41,-316.8 340.41,-316.8 340.41,-316.8 407.59,-316.8 407.59,-316.8 413.59,-316.8 419.59,-322.8 419.59,-328.8 419.59,-328.8 419.59,-340.8 419.59,-340.8 419.59,-346.8 413.59,-352.8 407.59,-352.8"/>
+<text text-anchor="middle" x="374" y="-331.8" font-family="Helvetica,sans-Serif" font-size="10.00">Failure Detection</text>
+</g><g id="node11" class="node" pointer-events="visible" data-name="b_sensors" data-comment="a_networking">
+
+<path fill="none" stroke="#2e4053" d="M562,-352.8C562,-352.8 532,-352.8 532,-352.8 526,-352.8 520,-346.8 520,-340.8 520,-340.8 520,-328.8 520,-328.8 520,-322.8 526,-316.8 532,-316.8 532,-316.8 562,-316.8 562,-316.8 568,-316.8 574,-322.8 574,-328.8 574,-328.8 574,-340.8 574,-340.8 574,-346.8 568,-352.8 562,-352.8"/>
+<text text-anchor="middle" x="547" y="-331.8" font-family="Helvetica,sans-Serif" font-size="10.00">Sensors</text>
+</g><g id="node12" class="node" pointer-events="visible" data-name="b_membership" data-comment="a_networking">
+
+<path fill="none" stroke="#2e4053" d="M397.52,-242C397.52,-242 350.48,-242 350.48,-242 344.48,-242 338.48,-236 338.48,-230 338.48,-230 338.48,-218 338.48,-218 338.48,-212 344.48,-206 350.48,-206 350.48,-206 397.52,-206 397.52,-206 403.52,-206 409.52,-212 409.52,-218 409.52,-218 409.52,-230 409.52,-230 409.52,-236 403.52,-242 397.52,-242"/>
+<text text-anchor="middle" x="374" y="-221" font-family="Helvetica,sans-Serif" font-size="10.00">Membership</text>
+</g><g id="node13" class="node" pointer-events="visible" data-name="b_state" data-comment="a_networking">
+
+<path fill="none" stroke="#2e4053" d="M484,-242C484,-242 454,-242 454,-242 448,-242 442,-236 442,-230 442,-230 442,-218 442,-218 442,-212 448,-206 454,-206 454,-206 484,-206 484,-206 490,-206 496,-212 496,-218 496,-218 496,-230 496,-230 496,-236 490,-242 484,-242"/>
+<text text-anchor="middle" x="469" y="-221" font-family="Helvetica,sans-Serif" font-size="10.00">State</text>
+</g><g id="node14" class="node" pointer-events="visible" data-name="b_topology" data-comment="a_networking">
+
+<path fill="none" stroke="#2e4053" d="M573.64,-242C573.64,-242 540.36,-242 540.36,-242 534.36,-242 528.36,-236 528.36,-230 528.36,-230 528.36,-218 528.36,-218 528.36,-212 534.36,-206 540.36,-206 540.36,-206 573.64,-206 573.64,-206 579.64,-206 585.64,-212 585.64,-218 585.64,-218 585.64,-230 585.64,-230 585.64,-236 579.64,-242 573.64,-242"/>
+<text text-anchor="middle" x="557" y="-221" font-family="Helvetica,sans-Serif" font-size="10.00">Topology</text>
+</g><g id="node15" class="node" pointer-events="visible" data-name="b_protocol" data-comment="a_networking">
+
+<path fill="none" stroke="#2e4053" d="M423,-147C423,-147 393,-147 393,-147 387,-147 381,-141 381,-135 381,-135 381,-123 381,-123 381,-117 387,-111 393,-111 393,-111 423,-111 423,-111 429,-111 435,-117 435,-123 435,-123 435,-135 435,-135 435,-141 429,-147 423,-147"/>
+<text text-anchor="middle" x="408" y="-126" font-family="Helvetica,sans-Serif" font-size="10.00">Protocol</text>
+</g><g id="node16" class="node" pointer-events="visible" data-name="b_networking" data-comment="a_networking">
+
+<path fill="none" stroke="#2e4053" d="M443.36,-52C443.36,-52 372.64,-52 372.64,-52 366.64,-52 360.64,-46 360.64,-40 360.64,-40 360.64,-28 360.64,-28 360.64,-22 366.64,-16 372.64,-16 372.64,-16 443.36,-16 443.36,-16 449.36,-16 455.36,-22 455.36,-28 455.36,-28 455.36,-40 455.36,-40 455.36,-46 449.36,-52 443.36,-52"/>
+<text text-anchor="middle" x="408" y="-31" font-family="Helvetica,sans-Serif" font-size="10.00">Networking / TCP</text>
+</g></g>
+</svg>

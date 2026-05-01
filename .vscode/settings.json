@@ -18,14 +18,13 @@
     },
     {
       "name": "latexmk-ci",
-      "command": "latexmk",
+      "command": "powershell",
       "args": [
-        "-pdf",
-        "-file-line-error",
-        "-halt-on-error",
-        "-interaction=nonstopmode",
-        "-synctex=1",
-        "%DOC%"
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-Command",
+        "$env:Path = 'C:\\Program Files\\Inkscape\\bin;' + $env:Path; latexmk -pdf -shell-escape -file-line-error -halt-on-error -interaction=nonstopmode -synctex=1 '%DOC%'"
       ]
     },
     {

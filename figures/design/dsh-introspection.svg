@@ -1,0 +1,95 @@
+<?xml version="1.0" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="605pt" height="242pt" viewBox="0.00 0.00 604.52 242">
+<g id="graph0" class="graph" transform="translate(4,238) scale(1)" data-name="ObservabilityFlowArchitecture">
+
+<polygon fill="white" stroke="none" points="-4,4 -4,-238 600.52,-238 600.52,4 -4,4"/>
+<g id="clust1" class="cluster" data-name="cluster_domain">
+
+<path fill="white" stroke="#2e4053" stroke-width="1.1" d="M20,-8C20,-8 83.02,-8 83.02,-8 89.02,-8 95.02,-14 95.02,-20 95.02,-20 95.02,-214 95.02,-214 95.02,-220 89.02,-226 83.02,-226 83.02,-226 20,-226 20,-226 14,-226 8,-220 8,-214 8,-214 8,-20 8,-20 8,-14 14,-8 20,-8"/>
+<text text-anchor="middle" x="51.51" y="-211.2" font-family="Helvetica,sans-Serif" font-size="12.00">Domain</text>
+</g>
+<!-- state&#45;&gt;introspection -->
+<g id="edge1" class="edge" data-name="state-&gt;introspection">
+
+<path fill="none" stroke="#5d6d7e" stroke-width="1.4" d="M78.68,-178C121.91,-178 201.52,-178 201.52,-178 201.52,-178 201.52,-136.29 201.52,-136.29"/>
+<polygon fill="#5d6d7e" stroke="#5d6d7e" stroke-width="1.4" points="205.03,-136.29 201.52,-126.29 198.03,-136.29 205.03,-136.29"/>
+</g>
+<!-- membership&#45;&gt;introspection -->
+<g id="edge2" class="edge" data-name="membership-&gt;introspection">
+
+<path fill="none" stroke="#5d6d7e" stroke-width="1.4" d="M87.25,-106C87.25,-106 133.33,-106 133.33,-106"/>
+<polygon fill="#5d6d7e" stroke="#5d6d7e" stroke-width="1.4" points="133.33,-109.5 143.33,-106 133.33,-102.5 133.33,-109.5"/>
+</g>
+<!-- topology&#45;&gt;introspection -->
+<g id="edge3" class="edge" data-name="topology-&gt;introspection">
+
+<path fill="none" stroke="#5d6d7e" stroke-width="1.4" d="M80.43,-34C124.03,-34 201.52,-34 201.52,-34 201.52,-34 201.52,-75.71 201.52,-75.71"/>
+<polygon fill="#5d6d7e" stroke="#5d6d7e" stroke-width="1.4" points="198.03,-75.71 201.52,-85.71 205.03,-75.71 198.03,-75.71"/>
+</g>
+<!-- events&#45;&gt;introspection -->
+
+<!-- introspection&#45;&gt;webapi -->
+<g id="edge4" class="edge" data-name="introspection-&gt;webapi">
+
+<path fill="none" stroke="#5d6d7e" stroke-width="1.4" d="M256.05,-106C256.05,-106 335.39,-106 335.39,-106"/>
+<polygon fill="#5d6d7e" stroke="#5d6d7e" stroke-width="1.4" points="335.39,-109.5 345.39,-106 335.39,-102.5 335.39,-109.5"/>
+<text text-anchor="middle" x="301.64" y="-108.7" font-family="Times,serif" font-size="9" fill="#5d6d7e">read-only</text>
+</g>
+<!-- webapi&#45;&gt;dashboard -->
+<g id="edge5" class="edge" data-name="webapi-&gt;dashboard">
+
+<path fill="none" stroke="#5d6d7e" stroke-width="1.4" d="M376.52,-124.42C376.52,-133.28 376.52,-142 376.52,-142 376.52,-142 500.67,-142 500.67,-142"/>
+<polygon fill="#5d6d7e" stroke="#5d6d7e" stroke-width="1.4" points="500.67,-145.5 510.67,-142 500.67,-138.5 500.67,-145.5"/>
+<text text-anchor="middle" x="443.59" y="-144.7" font-family="Times,serif" font-size="9" fill="#5d6d7e">HTTP</text>
+</g>
+<!-- webapi&#45;&gt;client -->
+<g id="edge6" class="edge" data-name="webapi-&gt;client">
+
+<path fill="none" stroke="#5d6d7e" stroke-width="1.4" stroke-dasharray="5,2" d="M403.81,-106C440.1,-106 498.52,-106 498.52,-106 498.52,-106 498.52,-100.54 498.52,-100.54"/>
+<polygon fill="#5d6d7e" stroke="#5d6d7e" stroke-width="1.4" points="502.03,-100.54 498.52,-90.54 495.03,-100.54 502.03,-100.54"/>
+<text text-anchor="middle" x="443.59" y="-72.7" font-family="Times,serif" font-size="9" fill="#5d6d7e">HTTP</text>
+</g>
+<!-- state -->
+<g id="node1" class="node" pointer-events="visible" data-name="state">
+
+<path fill="none" stroke="#2e4053" stroke-width="1.2" d="M66.51,-196C66.51,-196 36.51,-196 36.51,-196 30.51,-196 24.51,-190 24.51,-184 24.51,-184 24.51,-172 24.51,-172 24.51,-166 30.51,-160 36.51,-160 36.51,-160 66.51,-160 66.51,-160 72.51,-160 78.51,-166 78.51,-172 78.51,-172 78.51,-184 78.51,-184 78.51,-190 72.51,-196 66.51,-196"/>
+<text text-anchor="middle" x="51.51" y="-175" font-family="Helvetica,sans-Serif" font-size="10.00">State</text>
+</g>
+<!-- membership -->
+<g id="node2" class="node" pointer-events="visible" data-name="membership">
+
+<path fill="none" stroke="#2e4053" stroke-width="1.2" d="M75.03,-124C75.03,-124 27.99,-124 27.99,-124 21.99,-124 15.99,-118 15.99,-112 15.99,-112 15.99,-100 15.99,-100 15.99,-94 21.99,-88 27.99,-88 27.99,-88 75.03,-88 75.03,-88 81.03,-88 87.03,-94 87.03,-100 87.03,-100 87.03,-112 87.03,-112 87.03,-118 81.03,-124 75.03,-124"/>
+<text text-anchor="middle" x="51.51" y="-103" font-family="Helvetica,sans-Serif" font-size="10.00">Membership</text>
+</g>
+<!-- topology -->
+<g id="node3" class="node" pointer-events="visible" data-name="topology">
+
+<path fill="none" stroke="#2e4053" stroke-width="1.2" d="M68.15,-52C68.15,-52 34.87,-52 34.87,-52 28.87,-52 22.87,-46 22.87,-40 22.87,-40 22.87,-28 22.87,-28 22.87,-22 28.87,-16 34.87,-16 34.87,-16 68.15,-16 68.15,-16 74.15,-16 80.15,-22 80.15,-28 80.15,-28 80.15,-40 80.15,-40 80.15,-46 74.15,-52 68.15,-52"/>
+<text text-anchor="middle" x="51.51" y="-31" font-family="Helvetica,sans-Serif" font-size="10.00">Topology</text>
+</g>
+<!-- events -->
+
+<!-- introspection -->
+<g id="node4" class="node" pointer-events="visible" data-name="introspection">
+
+<path fill="none" stroke="#2e4053" stroke-width="1.2" d="M243.59,-124C243.59,-124 157.83,-124 157.83,-124 151.83,-124 145.83,-118 145.83,-112 145.83,-112 145.83,-100 145.83,-100 145.83,-94 151.83,-88 157.83,-88 157.83,-88 243.59,-88 243.59,-88 249.59,-88 255.59,-94 255.59,-100 255.59,-100 255.59,-112 255.59,-112 255.59,-118 249.59,-124 243.59,-124"/>
+<text text-anchor="middle" x="200.71" y="-103" font-family="Helvetica,sans-Serif" font-size="10.00">Introspection Service</text>
+</g>
+<!-- webapi -->
+<g id="node5" class="node" pointer-events="visible" data-name="webapi">
+
+<path fill="none" stroke="#2e4053" stroke-width="1.2" d="M391.57,-124C391.57,-124 359.65,-124 359.65,-124 353.65,-124 347.65,-118 347.65,-112 347.65,-112 347.65,-100 347.65,-100 347.65,-94 353.65,-88 359.65,-88 359.65,-88 391.57,-88 391.57,-88 397.57,-88 403.57,-94 403.57,-100 403.57,-100 403.57,-112 403.57,-112 403.57,-118 397.57,-124 391.57,-124"/>
+<text text-anchor="middle" x="375.61" y="-109" font-family="Helvetica,sans-Serif" font-size="10.00">Web API</text>
+<text text-anchor="middle" x="375.61" y="-97" font-family="Helvetica,sans-Serif" font-size="10.00">(/api/*)</text>
+</g>
+<g id="node6" class="node" pointer-events="visible" data-name="dashboard" data-comment="webapi">
+
+<path fill="none" stroke="#2e4053" stroke-width="1.2" d="M555.18,-160C555.18,-160 525.18,-160 525.18,-160 519.18,-160 513.18,-154 513.18,-148 513.18,-148 513.18,-136 513.18,-136 513.18,-130 519.18,-124 525.18,-124 525.18,-124 555.18,-124 555.18,-124 561.18,-124 567.18,-130 567.18,-136 567.18,-136 567.18,-148 567.18,-148 567.18,-154 561.18,-160 555.18,-160"/>
+<text text-anchor="middle" x="540.18" y="-139" font-family="Helvetica,sans-Serif" font-size="10.00">Web UI</text>
+</g><g id="node7" class="node" pointer-events="visible" data-name="client" data-comment="webapi">
+
+<path fill="none" stroke="#5d6d7e" stroke-width="1.2" stroke-dasharray="5,2" d="M584.37,-88C584.37,-88 496,-88 496,-88 490,-88 484,-82 484,-76 484,-76 484,-64 484,-64 484,-58 490,-52 496,-52 496,-52 584.37,-52 584.37,-52 590.37,-52 596.37,-58 596.37,-64 596.37,-64 596.37,-76 596.37,-76 596.37,-82 590.37,-88 584.37,-88"/>
+<text text-anchor="middle" x="540.18" y="-73" font-family="Helvetica,sans-Serif" font-size="10.00">Automated Tool</text>
+<text text-anchor="middle" x="540.18" y="-61" font-family="Helvetica,sans-Serif" font-size="10.00">(script / monitor / test)</text>
+</g></g>
+</svg>
