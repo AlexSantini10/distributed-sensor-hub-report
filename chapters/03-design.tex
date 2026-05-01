@@ -122,6 +122,8 @@ The main interaction patterns are:
   \item \textbf{polling-based observation}, used by the dashboard and external tools to inspect cluster state.
 \end{itemize}
 
+In implementation terms, \texttt{JOIN\_REQUEST}/\texttt{PEER\_LIST} are event-driven (startup and peer discovery), \texttt{PING}/\texttt{PONG} and \texttt{GOSSIP\_STATE} run at heartbeat cadence (\texttt{HEARTBEAT\_INTERVAL\_MS}), and replication rounds run at \texttt{GOSSIP\_SYNC\_INTERVAL\_MS}. Push (\texttt{SENSOR\_UPDATE}) and pull (\texttt{GET\_DELTA}) target random subsets of peers currently marked \texttt{alive}, with fanout and pull cadence controlled by \texttt{GOSSIP\_PUSH\_*} and \texttt{GOSSIP\_PULL\_*} parameters. \texttt{FULL\_SYNC\_REQUEST} is used both as fallback after \texttt{DELTA\_UNAVAILABLE} and during bootstrap to initialize state against seed peers. Topology has no dedicated request path: local connectivity/status changes update node-local topology state, which is then disseminated through the next gossip publications.
+
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.64\textwidth,keepaspectratio]{figures/design/interaction-bootstrap-peer-list.png}
@@ -209,112 +211,78 @@ Other components mainly trigger transitions or move data between these stores. T
 
 \subsection{Data and Consistency Issues}\label{data-and-consistency-issues}
 
-The system stores several forms of node-local runtime data:
+The system keeps only node-local runtime state:
 \begin{itemize}
-  \item the replicated sensor-state winners;
-  \item the incremental replication view needed for propagation and recovery;
-  \item the membership table and liveness metadata;
-  \item topology knowledge;
-  \item recent events and metrics for introspection.
+  \item replicated sensor winners and replication delta metadata;
+  \item local membership/liveness view;
+  \item local topology view;
+  \item recent introspection events and metrics.
 \end{itemize}
 
-This data is primarily \textbf{runtime state}, not long-term persistent storage. The design does not require an external database because the goal is to study distributed replication and convergence of current system knowledge rather than durable business records. This keeps the architecture lightweight and self-contained, matching IR3.
+No external database is required in the current design. State is in-memory and process-lifetime, with bounded retention for replication history and observability metadata.
 
-Therefore, the current design has no durable persistent dataset. If persistence were introduced in a future version, the natural model for sensor winners would be a key-value representation keyed by logical sensor identifier, while event and metric history would more naturally be stored as append-oriented records for later inspection.
+There is no persistent dataset in the current implementation. If persistence is introduced in future iterations, sensor winners naturally map to a key-value model, while historical event/metric streams are better represented as append-oriented records.
 
-Accordingly, no component performs database queries in the present design, because no database is part of the architecture. Instead, nodes read environment-backed configuration, node-local in-memory state, and data received from peers over the inter-node protocol, while observers query read-only HTTP snapshots exposed by each node.
+Because no database is part of the architecture, no component performs database queries in the current design.
 
-Conceptually, the replicated sensor state behaves like a key-value map from a logical sensor identifier to the current winning record. Internally, records are indexed by logical \texttt{sensor\_id}, while API snapshots expose them using the derived \texttt{origin:sensor\_id} form so that values from different origins remain unambiguous to observers. The important property is not relational querying power, but deterministic merge semantics. For this reason, the core consistency problem is solved at the application level rather than delegated to a storage engine.
-
-Consistency is handled differently for different data types:
+Consistency is eventual and data-type specific:
 \begin{itemize}
-  \item \textbf{sensor state} uses eventual consistency with deterministic Last-Write-Wins conflict resolution based on timestamp and origin metadata;
-  \item \textbf{membership state} also converges eventually, but it reflects local observations that may temporarily differ across nodes;
-  \item \textbf{topology state} converges eventually through gossip and uses per-node Last-Write-Wins declarations based on update timestamps, with deterministic tie-breaking for peer lists;
-  \item \textbf{observability data} is inherently approximate and time-sensitive, because it represents a snapshot of changing distributed state.
+  \item sensor state uses deterministic LWW merge semantics;
+  \item membership and topology converge through periodic exchange and gossip;
+  \item observability is read-only and snapshot-based by design.
 \end{itemize}
 
-This means the system explicitly rejects strong consistency as a primary goal. During partitions or transient delays, different nodes may expose different but still valid local views. Once communication resumes and no newer conflicting updates appear, the replicas converge. This choice is aligned with availability and partition tolerance.
-
-Data is shared among components in well-defined ways:
-\begin{itemize}
-  \item sensor producers share generated readings with the local state manager;
-  \item the state manager shares snapshots and deltas with the replication runtime and the observability subsystem;
-  \item the membership subsystem shares peer-status information with heartbeat, gossip, topology, and observability components;
-  \item the observability subsystem reads from other stores but does not modify them.
-\end{itemize}
-
-This read/write asymmetry is deliberate: observation must remain decoupled from mutation without introducing accidental feedback paths.
-
-Concurrent access to local state is expected because sensor ingestion, TCP protocol handlers, replication publishing, heartbeat evaluation, and HTTP polling may run at the same time. The design therefore separates write ownership and read access. Local sensor producers do not conceptually mutate the replicated state directly: they emit readings into an ingestion path consumed by the local state manager. Remote updates and full-sync responses also enter through explicit merge operations, while observers receive snapshots rather than direct references to mutable stores.
-
-The consequence is that concurrent reads and writes are allowed, but they are confined to node-local stores and protected by implementation-level synchronization. There is no distributed transaction spanning sensor state, membership, topology, and observability data. This limitation is acceptable because these views are intended to be eventually consistent, approximate, and inspectable rather than globally atomic.
+Concurrent access is expected and confined to node-local stores protected by implementation-level synchronization. No distributed transaction spans sensor, membership, topology, and observability data.
 
 \subsection{Fault-Tolerance}\label{fault-tolerance}
 
-Fault tolerance is one of the central design drivers of the project. The first mechanism is \textbf{state replication}: sensor-state knowledge is disseminated among peers so that the system does not depend on a unique owner of cluster knowledge. Replication is best-effort and decentralized, preserving autonomy and partition resilience even though it does not provide instantaneous consistency.
-
-The second mechanism is \textbf{heartbeat-based liveness observation}. Nodes periodically exchange liveness probes and evaluate the timing of received heartbeats. This allows each node to form a local judgement about whether a peer is alive, suspected, or dead. Since such knowledge is local and timing-dependent, the design treats liveness as a continuously revised estimate rather than as an absolute truth.
-
-Timeout semantics are therefore handled by the interaction between the heartbeat runtime, the failure detector, and the membership subsystem: missing or delayed heartbeat evidence increases suspicion, and the resulting status change is reflected in the local membership view rather than blocking the node.
-
-The third mechanism is \textbf{membership gossip}. A node does not keep liveness knowledge only for itself; it disseminates updated membership information so that peer knowledge can propagate even when direct connectivity patterns are incomplete. This improves resilience of membership awareness and helps the system maintain a broader view of the cluster.
-
-The fourth mechanism is \textbf{anti-entropy recovery}. Incremental propagation is efficient when peers stay mostly synchronized, but it may be insufficient after outages, restart, or missed traffic. For this reason, the design includes a stronger recovery path that allows a lagging node to regain a coherent replicated view after disruption.
-
-Retry behavior is present mainly as periodic or protocol-level reattempt rather than as a separate user-visible subsystem. Connection establishment can be retried with bounded backoff, heartbeat and replication rounds naturally re-attempt communication over time, and missed information can later be recovered through incremental synchronization or, when incremental deltas are no longer available, through a full synchronization exchange.
-
-Communication errors are treated as local, recoverable events. A failed send, missed heartbeat reply, or temporarily unreachable peer does not stop sensor ingestion or HTTP observation on the affected node; instead, the peer's membership status can degrade, later protocol rounds can retry communication, and synchronization can repair missed state when a route becomes available again.
-
-Error handling is intentionally failure-aware rather than failure-oblivious. If a component or peer becomes temporarily unavailable:
+Fault tolerance is achieved through four complementary mechanisms:
 \begin{itemize}
-  \item surviving nodes continue local operation;
-  \item local replicas may diverge temporarily;
-  \item membership views reflect degraded reachability;
-  \item synchronization resumes when communication becomes possible again.
+  \item decentralized state replication across peers;
+  \item heartbeat-based local liveness evaluation with phi-accrual suspicion levels;
+  \item membership gossip for peer-status dissemination;
+  \item anti-entropy recovery via incremental delta sync and full-sync fallback.
 \end{itemize}
 
-This behavior is preferable to halting the whole system because the project prioritizes availability and observation under faults over strong global coordination.
+Failures are treated as local and recoverable. Under outages or temporary disconnections, surviving nodes continue local operation, membership status may degrade, and synchronization reconciles missed state when connectivity returns.
 
 \subsection{Availability}\label{availability}
 
-The design does not introduce classical web-style caching layers or external load balancers, because the system is not centered on high-volume client traffic toward a centralized service. Instead, availability is achieved structurally through replication, autonomy of nodes, and local read access to each node's current view.
+Availability is achieved structurally through node autonomy, replicated state, and per-node read access.
 
-Each node acts as a locally available observation point. As long as a node remains running, it can still:
+There is no explicit caching layer: each node serves reads from its local replicated state, which provides read locality without a dedicated cache subsystem.
+
+No load balancer is required at the current scale because clients can query any reachable node directly.
+
+Each running node remains a locally available point that can:
 \begin{itemize}
   \item ingest its own local sensor readings;
   \item maintain its local replica;
   \item expose read-only snapshots to operators and tools.
 \end{itemize}
 
-In this sense, replicated state itself plays a role analogous to availability-oriented caching: each node keeps a local, eventually convergent working copy of shared cluster knowledge, so read operations do not require contacting a central authority.
+There is no mandatory central ingress for observation; clients may query any reachable node.
 
-No explicit load balancing is required because there is no single mandatory ingress point for observation. Different observers may query different nodes, and each node exposes its own local view. This is sufficient for the intended scale of the project.
-
-During a \textbf{network partition}, the design favors continued local operation over blocking. Nodes inside each connected component continue to exchange information among themselves, while nodes separated by the partition stop receiving fresh updates from one another. Consequently:
+During a network partition:
 \begin{itemize}
-  \item sensor-state replicas may diverge temporarily across partitions;
-  \item membership views may mark remote peers as suspected or dead;
-  \item local observation remains available inside each connected component.
+  \item nodes continue operation within their connected component;
+  \item replicas may diverge temporarily;
+  \item remote peers can be marked as suspected/dead.
 \end{itemize}
 
-When the partition heals, incremental dissemination and recovery mechanisms progressively re-align the replicas. This behavior is a direct consequence of choosing availability and partition tolerance over strong consistency.
+After healing, incremental dissemination and recovery progressively re-align replicas.
 
 \subsection{Security}\label{security}
 
-Security is intentionally limited in the current design because, as discussed in \cref{ds-features}, it is not a primary driver of this project. The system is assumed to run in controlled laboratory, development, or trusted demonstration environments.
+Security is intentionally limited in the current design and assumes controlled/trusted environments.
 
-Accordingly, the current design does \textbf{not} make authentication a core architectural dependency for either peer-to-peer traffic or read-only observation endpoints. Similarly, it does not define a rich authorization model with differentiated user permissions. The effective roles are simple: nodes participate in the distributed protocol, while observers query read-only information.
+Authentication and fine-grained authorization are not core architectural dependencies at this stage. Nodes exchange protocol traffic, while external clients are limited to read-only HTTP observation.
 
-The corresponding effective access rights are therefore minimal and explicit. Peer nodes may exchange internal protocol messages, maintain membership and liveness information, and merge received updates into their own local replicated state. External observers and clients are limited to read-only HTTP observation, since no write-oriented or administrative HTTP API is exposed by the current design.
-
-This choice keeps the architecture aligned with the educational scope of the project and avoids obscuring the main distributed-systems concerns with security infrastructure that is orthogonal to the report goals. However, the design has been kept modular enough that stronger security policies could be introduced later at clear boundaries:
+The design remains modular enough to add stronger security controls at clear boundaries:
 \begin{itemize}
-  \item on node-to-node channels, to authenticate peers and protect inter-node communication;
-  \item on HTTP observation endpoints, to restrict access to monitoring data;
-  \item on deployment boundaries, through network isolation and reverse-proxy policies.
+  \item node-to-node channel authentication/protection;
+  \item access control on observation endpoints;
+  \item deployment-level isolation and reverse-proxy policies.
 \end{itemize}
-
-Likewise, no cryptographic protocol is a conceptual prerequisite of the current system model. Confidentiality and strong identity guarantees are therefore outside the present scope and remain future extensions rather than core design commitments.
 
 \clearpage
