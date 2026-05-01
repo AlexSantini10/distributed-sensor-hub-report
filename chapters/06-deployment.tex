@@ -1,131 +1,59 @@
 \section{Deployment}\label{deployment}
 
-Project deployment was designed with two complementary objectives: enabling rapid execution on a single machine for development and debugging activities, while ensuring reproducibility of multi-node topologies through containerization. System distribution does not require external infrastructure, dedicated orchestrators, or persistent supporting services: each node autonomously executes its own networking logic, replication, failure detection, and HTTP observability.
+Deployment supports both local execution and reproducible multi-node scenarios through Docker Compose.
 
-\subsection{Software prerequisites}
-
-To run the project from scratch, the following tools are required:
+\subsection{Install from scratch}
+Required software:
 \begin{itemize}
-  \item a recent version of \textbf{Python 3}; the repository CI pipeline explicitly validates execution with \texttt{Python 3.12};
-  \item \textbf{pip} for Python dependency installation;
-  \item \textbf{Docker} and \textbf{Docker Compose} for launching containerized topologies;
-  \item optionally, a web browser to inspect the observability dashboard and HTTP endpoints exposed by nodes.
+  \item \textbf{Python 3.12} (CI-validated) and \textbf{pip};
+  \item \textbf{Docker} and \textbf{Docker Compose} for multi-node/container runs;
+  \item optional browser for dashboard/API inspection.
 \end{itemize}
 
-Runtime dependencies are intentionally minimal and defined in \texttt{requirements.txt}; development and static-analysis tools are instead collected in \texttt{requirements-dev.txt}, while \texttt{package.json} supports npm-based execution of \texttt{pyright}.
-
-\subsection{Local installation}
-
-Base project installation follows a linear procedure:
-\begin{enumerate}
-  \item clone the repository;
-  \item enter the project directory;
-  \item install required Python dependencies.
-\end{enumerate}
-
-A possible command sequence is the following:
 \begin{verbatim}
 git clone https://github.com/AlexSantini10/distributed-sensor-hub.git
 cd distributed-sensor-hub
 pip install -r requirements.txt
 \end{verbatim}
 
-At the end of the installation, the repository is ready both for direct execution of a single node and for running automated tests. A recommended initial check is:
-\begin{verbatim}
-python -m pytest -m "not integration" -q
-\end{verbatim}
-This verifies local environment consistency immediately.
+Expected outcome: dependencies installed and node runtime ready to start.
 
-\subsection{Configuration through environment variables}
-
-The entire node operational configuration is externalized through environment variables. This approach makes deployment easy to reproduce both locally and in containers, avoiding dependence on rigid configuration files and allowing different topologies to be described without code changes.
-
-The \texttt{.env.example} file documents the main variables, including:
+\subsection{Configuration}
+Runtime setup is environment-based (\texttt{.env.example}). Key variables include:
 \begin{itemize}
-  \item node identification and binding: \texttt{NODE\_ID}, \texttt{HOST}, \texttt{PORT}, \texttt{WEB\_API\_PORT};
-  \item initial bootstrap: \texttt{BOOTSTRAP\_PEERS};
-  \item TCP server limits: \texttt{SOCKET\_TIMEOUT}, \texttt{ACCEPT\_QUEUE\_SIZE}, \texttt{MAX\_CONNECTIONS}, \texttt{MAX\_WORKERS};
-  \item failure detector parameters: \texttt{PHI\_THRESHOLD\_SUSPECT}, \texttt{PHI\_THRESHOLD\_DEAD}, \texttt{PHI\_INITIAL\_INTERVAL\_S};
-  \item push/pull replication cadence: \texttt{GOSSIP\_SYNC\_INTERVAL\_MS}, \texttt{GOSSIP\_PUSH\_*}, \texttt{GOSSIP\_PULL\_*};
-  \item simulation of network delay and packet loss: \texttt{NETWORK\_DELAY\_*}, \texttt{NETWORK\_PACKET\_LOSS\_PROB};
-  \item definition of local sensors: \texttt{SENSORS} and the \texttt{SENSOR\_<i>\_*} family.
+  \item identity/endpoints: \texttt{NODE\_ID}, \texttt{HOST}, \texttt{PORT}, \texttt{WEB\_API\_PORT};
+  \item cluster bootstrap: \texttt{BOOTSTRAP\_PEERS};
+  \item heartbeat/replication tuning: \texttt{HEARTBEAT\_INTERVAL\_MS}, \texttt{GOSSIP\_*};
+  \item failure detection: \texttt{PHI\_THRESHOLD\_*};
+  \item optional sensor/network simulation parameters.
 \end{itemize}
 
-The practical outcome is that the same software image can assume different roles simply by changing the variable set, a useful feature for both testing and classroom demonstrations.
-
-\subsection{Running a single node}
-
-For a minimal local run, it is sufficient to define a few essential variables and start \texttt{node.py}. A PowerShell example is:
+\subsection{Run}
+Single node (example):
 \begin{verbatim}
-$env:NODE_ID="node-1"
-$env:HOST="0.0.0.0"
-$env:PORT="9000"
-$env:BOOTSTRAP_PEERS=""
-$env:WEB_API_PORT="10000"
-$env:LOG_LEVEL="INFO"
-$env:LOG_FILE="logs/node-1.log"
 python node.py
 \end{verbatim}
 
-The expected result is startup of the node with active TCP listener and HTTP server. In this mode the system is already queryable through web APIs, for example on \texttt{/api/state}, \texttt{/api/membership}, and \texttt{/api/introspection}.
+Expected outcome: active TCP listener + HTTP read API (e.g. \texttt{/api/introspection}).
 
-\subsection{Containerized deployment}
-
-Multi-node deployment is based on Docker Compose. The repository includes multiple Compose files, each targeting a different experimental scenario:
-\begin{itemize}
-  \item \texttt{docker/docker-compose-base.yml}: minimal 2-node topology, quick to start, useful for smoke tests and quick demos;
-  \item \texttt{docker/docker-compose-6-nodes.yml}: intermediate scenario, suitable for clearly observing state convergence and gossip dynamics;
-  \item \texttt{docker/docker-compose-12-nodes.yml}: denser scenario, designed to stress dissemination and observability readability;
-  \item Compose files dedicated to integration tests: used for deterministic scenarios and automated validation.
-\end{itemize}
-
-Startup is performed with commands such as the following, choosing one topology at a time because the scenarios expose overlapping container names and host ports:
+Multi-node with Docker Compose (examples):
 \begin{verbatim}
-docker compose -f docker/docker-compose-base.yml up --build -d
-docker compose -f docker/docker-compose-6-nodes.yml up --build -d
-docker compose -f docker/docker-compose-12-nodes.yml up --build -d
+  docker compose -f docker/docker-compose-6-nodes.yml up --build -d
+  docker compose -f docker/docker-compose-12-nodes.yml up --build -d
 \end{verbatim}
 
-The expected result is the creation of multiple homogeneous containers, each with:
-\begin{itemize}
-  \item its own logical identity (\texttt{NODE\_ID});
-  \item distinct TCP and HTTP ports exposed to the host;
-  \item dedicated sets of simulated sensors;
-  \item independently configured network and replication parameters;
-  \item a shared log directory mounted as a volume for external inspection.
-\end{itemize}
+Expected outcome: one container per node, each with dedicated identity/ports and cluster bootstrap configuration.
 
-\subsection{Engineering of Compose files}
+As an alternative to local image build, a prebuilt image can be pulled directly from GHCR:
+\begin{verbatim}
+docker pull ghcr.io/alexsantini10/distributed-sensor-hub:latest
+\end{verbatim}
 
-The \texttt{docker-compose} files do not merely instantiate identical node copies; they encode lab scenarios with heterogeneous profiles. In particular:
-\begin{itemize}
-  \item bootstrap peers are distributed across nodes to avoid dependence on a single initial contact point;
-  \item sensors differ by type, periodicity, latency, and measurement unit, so as to simulate non-uniform workloads;
-  \item some nodes deliberately introduce higher delays, jitter, or packet-loss probabilities to make degradation and recovery phenomena observable;
-  \item replicated-delta buffer size and push/pull thresholds are explicitly encoded in deployment, facilitating experimental tuning.
-\end{itemize}
-
-This choice is methodologically relevant: deployment is an integral part of the distributed experiment, not a mere operational detail. Compose files therefore function both as execution tools and as reproducible descriptions of scenarios analyzed during validation.
-
-\subsection{Startup verification}
-
-After deployment, verification can be conducted at three levels:
-\begin{itemize}
-  \item infrastructure level, by checking container status with \texttt{docker compose ps};
-  \item application level, by querying HTTP endpoints on one or more nodes;
-  \item system level, by running \texttt{python tests/integration/verify\_cluster.py} to confirm startup, reachability, and baseline cluster availability.
-\end{itemize}
-
-In this way, deployment is not considered complete only when processes are active, but when the cluster effectively exhibits the expected distributed behavior.
-
-\subsection{Continuous delivery of the Docker image}
-
-The project also includes a versioned continuous-delivery path for Docker images. The Docker CD workflow is triggered on pushes to the \texttt{main} branch, pull requests targeting \texttt{main}, manual execution, and version tags matching the \texttt{v*} pattern.
-
-For normal pushes to \texttt{main}, the workflow builds the node image from \texttt{docker/Dockerfile.base} and publishes it to GitHub Container Registry. The image receives rolling tags such as \texttt{latest}, \texttt{main}, and a commit-based \texttt{sha-*} tag. This makes the most recent development version easy to pull while still preserving a commit-specific image reference.
-
-Versioned delivery happens when a Git tag such as \texttt{v1.0.0} is pushed. In that case, the same workflow also publishes a Docker image tagged with the version name and creates a GitHub Release. The release contains the immutable image digest and a small operational bundle: a release note file, an example environment file for running one node, a minimal Docker Compose file pinned to the exact image digest, and a short README.
-
-This separates rolling deployment from explicit version publication. The \texttt{main} and \texttt{latest} tags are convenient for continuous development, while version tags provide reproducible release points. Because the release Compose file references the image by digest, a user can recreate the exact container image associated with that source version rather than depending on a mutable tag.
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\textwidth,keepaspectratio]{figures/design/deployment-cluster.png}
+  \caption{Deployment view of a multi-node cluster with peer TCP channels and read-only observer access.}
+  \label{fig:deployment-cluster}
+\end{figure}
 
 \clearpage
