@@ -171,9 +171,30 @@ The behavior of the main components can be summarized as follows.
 
 \textbf{The failure detector} behaves as a local evaluator rather than as a replicated authority. It interprets heartbeat timing and produces suspicion levels for peers observed directly by the node. Those local judgements are then translated into membership information that can be disseminated.
 
+\begin{figure}[H]
+  \centering
+  \includegraphics[scale=0.62]{figures/design/behaviour-membership-failure-detector-state.png}
+  \caption{Behavioural view of membership state transitions driven by failure-detection signals.}
+  \label{fig:behaviour-membership-failure-detector}
+\end{figure}
+
 \textbf{The heartbeat and gossip runtime} is periodic. At each round, it evaluates liveness, sends heartbeat probes, and disseminates updated membership knowledge. Its purpose is not to guarantee exact membership synchronization at every instant, but to make peer-status knowledge progressively converge.
 
+\begin{figure}[H]
+  \centering
+  \includegraphics[scale=0.72]{figures/design/behaviour-heartbeat-gossip-runtime-activity.png}
+  \caption{Behavioural activity flow of heartbeat and gossip runtime rounds.}
+  \label{fig:behaviour-heartbeat-gossip-runtime}
+\end{figure}
+
 \textbf{The replication runtime} is periodic as well. It pushes recent sensor-state updates to selected peers and pulls missing updates from others. In particular, the publisher side targets peers currently considered \texttt{alive}, while heartbeat and membership gossip activities may still attempt communication toward peers that are not currently classified as \texttt{alive}. When incremental recovery is not sufficient, it can trigger a broader synchronization phase. This behavior is essential for convergence, recovery, and partition-aware operation.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[scale=0.72]{figures/design/behaviour-replication-runtime-activity.png}
+  \caption{Behavioural activity flow of periodic replication and recovery decisions.}
+  \label{fig:behaviour-replication-runtime}
+\end{figure}
 
 \textbf{The observability subsystem} is read-only. It collects snapshots from state, membership, topology, and event/metric providers, then publishes a coherent observation view for users and tools.
 
