@@ -1,116 +1,89 @@
 \section{Implementation}\label{implementation}
 
-This chapter reports the concrete technology-dependent choices used to realize the design discussed in \cref{design}. The implementation deliberately favors a lightweight and inspectable stack, so that the distributed behavior of the system remains visible and reproducible without relying on heavy external infrastructure.
+This chapter reports the main technology-dependent choices used to realize the design in \cref{design}.
 
 \subsection{Protocols and Data Representation}
 \label{implementation-protocols}
 
-Two communication protocols are used, each chosen according to the interaction style required by the system.
+The implementation uses two communication planes with different responsibilities.
 
 \textbf{Node-to-node communication.}
-Peer communication is implemented over \textbf{TCP}. This choice was preferred over UDP because the project needs ordered and reliable byte-stream delivery while a connection remains healthy, while still keeping the communication stack simple and under direct control. TCP is therefore used for:
+Peer communication is implemented over \textbf{TCP}, with a custom application protocol and JSON payloads. TCP is used for:
 \begin{itemize}
-  \item bootstrap and peer discovery traffic;
-  \item heartbeat exchange;
-  \item membership gossip dissemination;
-  \item sensor-state update propagation;
-  \item incremental and full synchronization during recovery.
+  \item bootstrap and peer discovery (\texttt{JOIN\_REQUEST}, \texttt{PEER\_LIST});
+  \item heartbeat liveness traffic (\texttt{PING}, \texttt{PONG});
+  \item membership/topology view convergence (\texttt{GOSSIP\_STATE}, distinct from heartbeat and discovery flows);
+  \item replicated sensor updates (\texttt{SENSOR\_UPDATE});
+  \item incremental and full catch-up (\texttt{GET\_DELTA}, \texttt{DELTA\_UNAVAILABLE}, \texttt{FULL\_SYNC\_REQUEST}, \texttt{FULL\_SYNC\_RESPONSE}).
 \end{itemize}
 
-Rather than adopting an external RPC or messaging framework, the project uses a custom lightweight application protocol on top of TCP. Payloads are transmitted as length-prefixed frames, which makes message boundaries explicit and keeps the implementation compatible with a persistent stream-oriented transport.
+Replication is implemented as a push-pull runtime: nodes periodically push local deltas and periodically request missing deltas from sampled alive peers, with fallback to full sync when incremental history is unavailable.
 
 \textbf{Observer communication.}
-Human users and external tools interact with the system through a \textbf{read-only HTTP API}. HTTP is appropriate here because the observability plane is request-response oriented, browser-friendly, and naturally suited to dashboards, integration scripts, and test harnesses. Since the observation API does not participate in peer coordination, it is intentionally separated from the internal peer-to-peer protocol.
+External users/tools interact through a \textbf{HTTP API} implemented with \texttt{ThreadingHTTPServer}. The HTTP surface is intentionally observation-oriented: it exposes read endpoints (e.g., state, updates, membership, topology, introspection) and also serves static dashboard assets, while remaining separate from peer coordination logic.
 
 \textbf{In-transit representation.}
-Messages and HTTP responses are represented as \textbf{JSON}. This choice was motivated by readability, ease of debugging, and direct interoperability with browsers and Python tooling. JSON is sufficient for the project because payload sizes are moderate and the main goal is clarity rather than binary compactness. Message validation and dispatch are then handled at the protocol layer after decoding.
-
-The main message families implemented in the peer protocol are:
-\begin{itemize}
-  \item \texttt{JOIN\_REQUEST} and \texttt{PEER\_LIST} for discovery;
-  \item \texttt{PING} and \texttt{PONG} for heartbeat-based liveness observation;
-  \item \texttt{GOSSIP\_STATE} for disseminating membership and topology knowledge;
-  \item \texttt{SENSOR\_UPDATE} for push-based sensor replication;
-  \item \texttt{GET\_DELTA} and \texttt{DELTA\_UNAVAILABLE} for incremental recovery;
-  \item \texttt{FULL\_SYNC\_REQUEST} and \texttt{FULL\_SYNC\_RESPONSE} for stronger catch-up after disruption.
-\end{itemize}
+Protocol messages and HTTP responses are represented as \textbf{JSON} (UTF-8), chosen for inspectability and interoperability with browser/Python tooling.
 
 \subsection{State Management and Storage Choices}
 \label{implementation-storage}
 
-The implementation does \textbf{not} use an external database. All relevant information is maintained as in-memory runtime state inside each node:
+The implementation uses \textbf{in-memory state only}; no external database is used. Each node maintains:
 \begin{itemize}
-  \item the current winning sensor records;
-  \item replication deltas and sequence metadata;
-  \item the peer membership table;
-  \item liveness-related information;
-  \item topology snapshots;
-  \item introspection events and counters.
+  \item current winning sensor records;
+  \item bounded ordered replication deltas and per-origin sequence tracking;
+  \item peer membership/liveness state;
+  \item topology state;
+  \item introspection snapshots (events/metrics).
 \end{itemize}
 
-This is consistent with the project scope: the goal is to study replication, convergence, recovery, and observability of current distributed state, not durable long-term business storage. As a consequence, no SQL or NoSQL query layer is required. Queries are replaced by direct access to in-memory state providers, which are then exposed through the HTTP observation endpoints.
+Sensor convergence is implemented in application logic via deterministic LWW merge semantics on \texttt{(timestamp, origin)}. Membership and liveness are maintained as local views updated by protocol handlers and periodic runtime components.
 
-From an implementation viewpoint, the most important storage choice is therefore not the selection of a database technology, but the decision to encode merge semantics explicitly in the application logic. Sensor-state convergence is implemented with deterministic Last-Write-Wins conflict resolution based on timestamp and origin metadata, while membership and liveness views are maintained through dedicated in-memory structures updated by protocol handlers and periodic runtimes.
+\textbf{Membership and topology runtime model.}
+Membership is maintained per node in a local \texttt{PeerTable}, updated by discovery traffic (\texttt{JOIN\_REQUEST}, \texttt{PEER\_LIST}), heartbeat evidence (\texttt{PING}/\texttt{PONG}), and gossip exchanges. Peer status is not binary up/down: it is evaluated as \texttt{alive}/\texttt{suspect}/\texttt{dead} from time-based evidence and configurable phi thresholds (e.g., \texttt{phi\_threshold\_suspect}, \texttt{phi\_threshold\_dead}).
+
+Membership updates use deterministic timestamp-based merge logic for liveness/status information, so node-local views still converge when updates are received in different orders. \texttt{GOSSIP\_STATE} carries not only peer presence but also metadata useful for convergence of cluster-view and observed topology state.
+
+Topology is represented as explicit runtime state in a dedicated in-memory component (\texttt{TopologyStateStore}), updated by gossip/runtime flows and exposed as a read-only snapshot. Link-selection behavior is policy-driven (currently \texttt{full\_mesh}), configured through \texttt{TOPOLOGY\_POLICY}, so topology behavior can evolve without changing the peer protocol.
+
+For observability, membership and topology snapshots are exposed through HTTP endpoints (e.g., \texttt{/api/membership}, \texttt{/api/topology}). Unlike sensor-state LWW records, membership/topology follow dedicated liveness/operational merge rules and are not treated as ordinary sensor-value entities.
 
 \subsection{Authentication and Authorization}
 \label{implementation-auth}
 
-No explicit authentication or authorization protocol is implemented in the current version of the system. This is a deliberate scope decision, not an omission by accident. The project runs in controlled development and laboratory environments, and the report prioritizes decentralization, consistency, failure handling, and observability over access-control concerns.
-
-Accordingly:
+No explicit authentication/authorization is implemented in the current version (scope choice for controlled lab/development setups):
 \begin{itemize}
-  \item peer-to-peer channels do not currently require node authentication;
-  \item the HTTP API does not require login, tokens, or session management;
-  \item the system does not implement role-based or attribute-based authorization.
+  \item peer channels are not authenticated;
+  \item HTTP endpoints do not require tokens/sessions/login;
+  \item no RBAC/ABAC layer is implemented.
 \end{itemize}
 
-The practical effect is that any process able to reach a node in the current deployment can interact with the exposed interface allowed by that channel. This is acceptable for the project scope, but it also marks a clear limitation of the current implementation. Stronger authentication, endpoint protection, and transport hardening are left as future work rather than embedded in the present runtime.
+There is currently no TLS/mTLS protection on transport channels. Therefore, reachability to an exposed node interface implies access to that interface. Security hardening is future work.
 
 \subsection{Technological details}\label{technological-details}
 
-\textbf{Programming language and runtime.}
-The project is implemented in \textbf{Python}. This choice supports rapid experimentation, readable code, and low setup cost for a course project. The implementation makes extensive use of the Python standard library for networking, concurrency, HTTP serving, serialization, logging, and timing, which keeps external dependencies intentionally minimal.
-
-\textbf{Concurrency model.}
-The runtime is based on \textbf{threads}, background worker loops, and in-memory queues. This model is used for several long-lived activities that must proceed concurrently:
+\textbf{Core technologies used}:
 \begin{itemize}
-  \item accepting inbound TCP connections;
-  \item maintaining outbound peer workers;
-  \item periodic heartbeat and failure-detector evaluation;
-  \item periodic push-pull replication;
-  \item sensor generation;
-  \item HTTP serving for observation.
+  \item \textbf{Python} runtime and standard library (\texttt{socket}, \texttt{threading}, \texttt{ThreadingHTTPServer}, \texttt{json}, \texttt{logging});
+  \item \textbf{thread-based concurrency} (server threads, worker pools, periodic background threads, queue-based local sensor ingestion);
+  \item \textbf{environment-based configuration} via \texttt{.env} and \texttt{python-dotenv};
+  \item \textbf{Docker}/\textbf{Docker Compose} for reproducible multi-node execution;
+  \item \textbf{pytest} and \textbf{pyright} for testing and static analysis.
 \end{itemize}
 
-This approach was preferred to a more complex actor framework or asynchronous event-loop architecture because it keeps the execution model explicit and understandable, which is desirable for an educational distributed-systems project.
-
-Concurrent access to local replicated state is handled through a combination of queue-based ingestion and explicit locking. Local sensor providers enqueue normalized sensor events into a thread-safe event queue consumed by the \texttt{NodeStateWorker}; remote protocol handlers can invoke merge operations for \texttt{SENSOR\_UPDATE} and \texttt{FULL\_SYNC\_RESPONSE} messages. The underlying \texttt{NodeStateStore} protects sensor records, update buffers, replication deltas, sequence cursors, and origin-sequence tracking with a mutex. Membership and failure-detector state are protected separately by locks in the peer table and heartbeat monitor. This mitigates in-process race conditions among sensor generation, TCP handlers, replication publishing, heartbeat evaluation, and HTTP polling. The remaining limits are deliberate: state and membership are not updated atomically as one transaction, replication buffers are bounded and volatile, and recovery relies on peer synchronization rather than durable local storage.
-
-\textbf{Configuration management.}
-Node configuration is externalized through \textbf{environment variables}. Parameters such as node identity, ports, bootstrap peers, sensor definitions, replication cadence, failure-detector thresholds, and fault-injection options are all configurable from the environment. This makes it easy to instantiate different topologies and experimental scenarios without changing source code.
-
-\textbf{Sensor implementation.}
-Sensor sources are implemented as pluggable local producers. The repository includes multiple simulated sensor types, such as numeric, boolean, wave, noise, spike, trend, categorical, incremental, and finite test sensors. This confirms the extensibility objective identified in NFR6 while keeping the whole platform reproducible in the absence of real hardware devices.
-
-\textbf{Networking layer.}
-The transport layer is implemented with Python sockets and a custom framed TCP protocol. On the outbound side, each peer connection has its own worker and FIFO send queue; on the inbound side, a threaded TCP server accepts connections, reads framed messages, validates them, and dispatches them to protocol handlers. The implementation also includes bounded worker counts and configurable socket limits, which helps prevent unbounded resource growth in larger experiments.
-
-\textbf{HTTP observation layer.}
-The Web API is implemented with Python's \texttt{http.server} facilities, in particular a threaded HTTP server and custom request handlers. This is sufficient because the API is read-only and relatively small, so introducing a larger web framework would not provide proportionate benefits for the project scope.
-
-\textbf{Containerization and deployment automation.}
-The project uses \textbf{Docker} and \textbf{Docker Compose} to instantiate reproducible node topologies. Multiple compose configurations are provided, including small and medium cluster layouts, so that the same codebase can be exercised under different scales and fault scenarios. Containerization strongly supports NFR5 because it reduces environmental variability across test runs and demonstrations.
-
-\textbf{Testing and quality tools.}
-Validation and development are supported by:
+\textbf{Key implementation mechanisms}:
 \begin{itemize}
-  \item \textbf{pytest} for unit and integration testing;
-  \item Docker-backed integration harnesses for multi-node and fault-recovery scenarios;
-  \item \textbf{pyright} for static type checking;
-  \item structured logging and introspection endpoints for runtime diagnosis.
+  \item explicit TCP application framing with server-side frame-size validation;
+  \item inbound backpressure: the node accepts only a bounded number of connections/workers and rejects excess load;
+  \item resilient outbound channels: per-peer message queues with retry/backoff and automatic reconnect;
+  \item push-pull replication tuning via configurable probabilistic fanout/cadence parameters (push ratio, pull ratio, pull cadence);
+  \item bounded incremental delta log (\texttt{replication\_delta\_maxlen}) to control memory usage and trigger full-sync fallback when history is insufficient;
+  \item per-origin cursor tracking (\texttt{latest\_seq\_by\_origin}) to resume incremental recovery from correct sequence points;
+  \item configurable runtime fault injection (delay/jitter/loss) for robustness testing without external fault-injection tooling.
 \end{itemize}
 
-\textbf{Dependencies.}
-External dependencies are intentionally few. Besides development tools, the main runtime dependency is \texttt{python-dotenv}, used to simplify environment-based configuration. This minimal dependency footprint is coherent with the project's emphasis on portability, inspectability, and self-contained deployment.
+Overall, the stack is intentionally lightweight and explicit, prioritizing observability, reproducibility, and deterministic behavior over framework-heavy abstractions.
+
+In discursive terms, these implementation choices directly realize the requirements discussed in \cref{requirements}, especially the sections on distributed behavior, resilience under failures, and operational observability.
 
 \clearpage
