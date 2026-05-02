@@ -1,66 +1,50 @@
 \section{Future works}\label{future-works}
 
-Although the project achieves its educational objectives in terms of distributed replication, eventual convergence, and observability, the implemented architecture leaves room for several significant extensions, both from an engineering and an experimental perspective.
+The current implementation satisfies the project objectives, but several extensions could improve production-readiness and experimental depth.
 
 \subsection{Security and operational hardening}
 
-The first area for evolution concerns security. In the current version, the system operates in a controlled context and does not implement peer authentication, HTTP API protection, or channel encryption. A natural evolution would be to introduce:
+The current deployment model assumes a trusted network and cooperative nodes.
+A realistic deployment should strengthen identity, transport security, and endpoint control:
 \begin{itemize}
-  \item mutual authentication among nodes;
-  \item protection of HTTP endpoints through tokens or mutual TLS;
-  \item stricter validation of the sender's logical identity with respect to the transport channel;
-  \item authorization policies to distinguish observational and administrative roles.
+  \item mutual node authentication to prevent unauthorized peers from joining the cluster;
+  \item protection of HTTP endpoints via tokens and/or mTLS, to restrict data exposure;
+  \item explicit authorization boundaries between read-only observability operations and administrative/runtime control operations.
 \end{itemize}
-
-These changes would bring the system closer to a real-world scenario, where fault tolerance must coexist with baseline trust requirements and control-plane protection.
 
 \subsection{Persistence and historical data}
 
-At present, nodes retain only in-memory volatile state. This choice is consistent with the project's focus, but limits the system's ability to survive extended restarts or provide long-term temporal analysis. A relevant extension would therefore be the introduction of:
+At present, node state is in-memory, which is sufficient for runtime convergence but weak for restart continuity and post-mortem analysis.
+Useful next steps include:
 \begin{itemize}
-  \item local persistence of sensor records and recent deltas;
-  \item periodic snapshots of membership and topology metadata;
-  \item startup restore mechanisms to reduce bootstrap cost;
-  \item separate historical archiving for offline analysis and comparison across experimental runs.
+  \item local persistence of sensor state and recent deltas;
+  \item periodic snapshots of membership and topology views;
+  \item startup restore to reduce cold-start convergence and recovery time;
+  \item optional export of time-series/history data for offline analysis and reproducible experiments.
 \end{itemize}
-
-This evolution would also enable more rigorous comparisons of \emph{cold-start} behavior, recovery times, and temporary information loss after extended crashes.
 
 \subsection{Richer replication semantics}
 
-The adopted Last-Writer-Wins criterion is simple, deterministic, and suitable for the project context, but it is also a simplification. Looking ahead, it would be interesting to evaluate:
+The current LWW policy is deterministic and simple, but it is still a general-purpose approximation.
+Future iterations could evaluate richer consistency semantics:
 \begin{itemize}
-  \item the use of data-type-specific CRDTs;
-  \item differentiated merge policies by sensor category;
-  \item version vectors or causal metadata to better distinguish true concurrency from simple delayed arrival;
-  \item adaptive strategies between incremental replication and full sync based on observed divergence.
+  \item CRDTs tailored to specific data types;
+  \item merge policies differentiated by sensor category and domain meaning;
+  \item causal metadata (e.g., version vectors) to preserve ordering information;
+  \item adaptive selection between delta synchronization and full synchronization (refining the existing fallback policy) based on runtime conditions.
 \end{itemize}
 
-These extensions would enable deeper study of the trade-off between implementation simplicity, amount of exchanged metadata, and semantic quality of convergence.
+\subsection{Low-degree topology policy and validation}
 
-\subsection{Experiments on larger topologies}
-
-Another natural direction concerns extending experimental scale. Current topologies already allow observation of interesting phenomena, but extending to larger clusters, more heterogeneous connectivity, or additional topology policies such as low-degree connection strategies would make it possible to:
+A key next step is the design and implementation of a low-degree topology policy, as an alternative to full-mesh connectivity.
+After introducing this policy, the system should be validated experimentally to measure its impact on behavior and scalability.
+This would allow:
 \begin{itemize}
-  \item evaluate the impact of topology density on gossip traffic;
-  \item compare full-mesh behavior with lower-degree topology policies;
-  \item study failure-detector sensitivity in less regular networks;
-  \item compare fan-out, sync intervals, and delta-buffer sizes under higher loads;
-  \item verify readability and sustainability of observability as node count grows.
+  \item comparing full-mesh and low-degree policies under the same workloads;
+  \item quantifying the trade-off between reduced connection density and convergence speed;
+  \item measuring effects on gossip overhead, sync traffic, and recovery dynamics;
+  \item analyzing failure-detector sensitivity under different latency/loss distributions;
+  \item tuning fan-out, synchronization intervals, and delta-buffer size under sustained load.
 \end{itemize}
-
-From an experimental standpoint, it would also be useful to complement this with systematic quantitative metrics on convergence latency, traffic volume, and recovery costs.
-
-\subsection{Advanced observability and analysis tooling}
-
-The project already provides a solid read-only introspection baseline, but it could be further extended through:
-\begin{itemize}
-  \item export of metrics to standard monitoring stacks;
-  \item automatic alerting on critical stale-data or \texttt{DELTA\_UNAVAILABLE} thresholds;
-  \item persistent temporal tracing of control-plane events;
-  \item automated comparison across different replication and failure-detection configurations.
-\end{itemize}
-
-In this way, the system would become not only a functional prototype, but also a more mature experimental platform for systematically analyzing the consequences of architectural choices.
 
 \clearpage
