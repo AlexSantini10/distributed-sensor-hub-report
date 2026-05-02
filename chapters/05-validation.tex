@@ -1,110 +1,94 @@
 \section{Validation}\label{validation}
 
-Project validation was designed across multiple layers to verify both the functional correctness of individual modules and the emergent behavior of the distributed system under replication, failures, and reconnection. The adopted strategy combines unit tests, integration tests, smoke tests in a containerized environment, and manual observation scenarios, with the goal of covering the entire node lifecycle: startup, bootstrap, state propagation, failure detection, recovery, and introspection.
+Validation follows a layered approach: unit tests for local correctness, integration tests for multi-node behavior, Docker-based tests for production-like conditions, and manual acceptance checks for observability quality.
 
 \subsection{Automatic Testing}\label{automatic-testing}
 
-\textbf{Unit tests.}
-The foundation of the validation plan is a unit test suite developed with \texttt{pytest}. Unit tests verify, in isolation, the responsibilities of the system's main modules:
+\textbf{Unit and modular tests.}
+Unit tests are implemented with \texttt{pytest} and validate component-level responsibilities:
 \begin{itemize}
-  \item \texttt{tests/protocol/}: correctness of serialization, deserialization, validation, and dispatch of application-protocol messages;
-  \item \texttt{tests/networking/}: TCP framing, client/server connection handling, operational limits, and transport robustness;
-  \item \texttt{tests/state/}: deterministic application of the Last-Write-Wins policy and maintenance of incremental deltas;
-  \item \texttt{tests/membership/} and \texttt{tests/fd/}: membership-view updates, heartbeat handling, and \emph{phi-accrual} estimation for peer classification;
-  \item \texttt{tests/sensors/}: behavior of simulated sensor generators and the related lifecycle manager;
-  \item \texttt{tests/webapi/} and \texttt{tests/introspection/}: consistency of read-only HTTP endpoints and of the introspection contract exposed to clients.
+  \item protocol parsing/validation/dispatch (\path{tests/protocol/*});
+  \item networking robustness and limits (\path{tests/networking/*});
+  \item LWW state merge and delta handling (\path{tests/state/*});
+  \item membership and phi-accrual failure detection (\path{tests/membership/*}, \path{tests/fd/*});
+  \item topology policies and in-memory topology state (\path{tests/topology/*});
+  \item sensor providers (\path{tests/sensors/*});
+  \item read-only observation endpoints (\path{tests/webapi/*}, \path{tests/introspection/*}).
 \end{itemize}
 
-The rationale for this suite is twofold: on the one hand, to prevent regressions in components with local semantics; on the other hand, to make explicit the invariants that the system must preserve regardless of distributed topology. At the time of local repository verification, running \texttt{python -m pytest -m "not integration" -q} produced \texttt{180 passed, 9 deselected}, confirming the stability of the non-integrated portion of the suite.
+Rationale: prevent local regressions and enforce core invariants independently of topology.
 
-\textbf{In-process integration tests.}
-A second validation layer exercises interaction among multiple real nodes executed within the same test process or in processes coordinated by dedicated harnesses. In particular:
+\textbf{Harness (in-process integration).}
+In-process integration tests exercise interaction among real nodes coordinated by local harnesses:
 \begin{itemize}
-  \item \texttt{tests/integration/test\_deterministic\_state\_convergence.py} verifies replicated-state convergence in a six-node cluster, checking that final LWW winners match expected outcomes;
-  \item \texttt{tests/integration/test\_cluster\_harness.py} validates the correct behavior of the supporting infrastructure for reproducible distributed scenarios;
-  \item \texttt{tests/integration/test\_finite\_test\_sensor.py} uses deterministic sources to make update sequences observable and comparable across nodes.
+  \item harness component: \path{tests/integration/cluster_harness.py};
+  \item harness validation: \path{tests/integration/test_cluster_harness.py};
+  \item deterministic convergence scenario: \path{tests/integration/test_deterministic_state_convergence.py};
+  \item finite deterministic sensor flow scenario: \path{tests/integration/test_finite_test_sensor.py}.
 \end{itemize}
 
-These tests cover properties that cannot be inferred from local correctness alone: incremental propagation, relative ordering of updates, initial bootstrap, and eventual convergence after multiple message exchanges.
+These tests target properties that unit tests alone cannot prove: bootstrap behavior, propagation ordering effects, and eventual convergence.
 
-\textbf{Docker-based integration tests and production-like scenarios.}
-The third validation layer uses Docker Compose topologies to exercise the software in an environment closer to real deployment. This category includes:
+\textbf{Docker (production-like integration).}
+Docker-based integration tests run in containerized Compose topologies:
 \begin{itemize}
-  \item \texttt{tests/integration/test\_docker\_deterministic\_state\_convergence.py}, which replicates convergence verification on containerized nodes;
-  \item \texttt{tests/integration/test\_docker\_crash\_restart\_recovery.py}, which evaluates recovery after node stop and restart;
-  \item \texttt{tests/integration/test\_docker\_partition\_reconciliation.py}, which verifies state reconciliation after a connectivity discontinuity;
-  \item \texttt{tests/integration/verify\_cluster.py}, used as an end-to-end smoke test to check correct cluster startup and reachability of primary endpoints.
+  \item harness component: \path{tests/integration/docker_cluster_harness.py};
+  \item Docker availability guards: \path{tests/integration/docker_requirements.py};
+  \item \path{tests/integration/test_docker_deterministic_state_convergence.py}: verifies that, with deterministic workload in a containerized multi-node cluster, all nodes converge to the same final state view.
+  \item \path{tests/integration/test_docker_partition_reconciliation.py}: verifies that after a temporary network partition, nodes reconcile missing updates (delta/full-sync fallback) and converge again once connectivity is restored.
+  \item \path{tests/integration/test_docker_crash_restart_recovery.py}: verifies that a restarted node re-joins the cluster, recovers current state from peers, and reaches convergence again without manual intervention.
 \end{itemize}
 
-The main advantage of this solution is that the same deployment setup used for demonstrations is reused as test infrastructure. This reduces the distance between development, verification, and presentation environments, improving the reproducibility of experiments.
+Rationale: reuse the same deployment style used in demonstrations, reducing environment drift.
+
+The Docker integration scenarios use dedicated Compose configurations, in particular \path{docker/docker-compose-integration-tests.yml} and \path{docker/docker-compose-integration-deterministic.yml}.
 
 \textbf{Execution automation.}
-Automated test execution is also supported by CI workflows defined in \texttt{.github/workflows/unit-tests.yml} and \texttt{.github/workflows/integration-tests.yml}. The unit-test pipeline installs dependencies and runs \texttt{pytest} while excluding integration tests, whereas the integration pipeline runs both deterministic convergence checks and a smoke test on the \texttt{docker/docker-compose-base.yml} Docker topology. This automation helps detect regressions in both local logic and the most relevant distributed scenarios.
+Automated execution is provided by CI workflows (\path{.github/workflows/unit-tests.yml}, \path{.github/workflows/integration-tests.yml}). In the current CI configuration, \path{.github/workflows/unit-tests.yml} runs unit/modular suites, while \path{.github/workflows/integration-tests.yml} runs the deterministic in-process integration check (\path{tests/integration/test_deterministic_state_convergence.py}).
 
 \textbf{How to run the tests.}
-The main execution modes, already documented in the repository, are the following:
+Main execution commands:
 \begin{itemize}
-  \item unit and modular tests: \texttt{pytest --maxfail=1} or \texttt{python -m pytest -v -m "not integration"};
-  \item protocol tests: \texttt{pytest -m protocol};
-  \item targeted verification of LWW convergence:
+  \item unit/modular tests:
+\begin{verbatim}
+python -m pytest -v -m "not integration"
+\end{verbatim}
+  \item targeted multi-node convergence:
 \begin{verbatim}
 python -m pytest tests/integration/test_deterministic_state_convergence.py -q -s
 \end{verbatim}
-  \item Docker end-to-end smoke test for a 6-node manual scenario: start the Compose topology with:
+  \item Docker integration validation (examples):
 \begin{verbatim}
-docker compose -f docker/docker-compose-6-nodes.yml up --build -d
-\end{verbatim}
-  then run:
-\begin{verbatim}
-python tests/integration/verify_cluster.py --timeout 60 --interval 2
+python -m pytest tests/integration/test_docker_deterministic_state_convergence.py -q -s
+python -m pytest tests/integration/test_docker_partition_reconciliation.py -q -s
+python -m pytest tests/integration/test_docker_crash_restart_recovery.py -q -s
 \end{verbatim}
 \end{itemize}
 
-\textbf{Coverage with respect to project goals.}
-Overall, automated tests cover the most important points identified in the project requirements:
+\textbf{Coverage and rationale.}
+The three-layer strategy (unit, harness, Docker) covers the central project goals:
 \begin{itemize}
-  \item correctness of the communication protocol and its validations;
-  \item deterministic convergence of replicated state;
-  \item propagation of membership and liveness information;
-  \item tolerance to crashes, restarts, and temporary partitions;
-  \item external verifiability through HTTP APIs and introspection.
+  \item protocol correctness and validation;
+  \item deterministic replicated-state convergence;
+  \item membership/liveness dissemination;
+  \item crash, restart, and partition tolerance;
+  \item read-only API and introspection correctness.
 \end{itemize}
 
-More explicitly, the main test groups map to requirements as follows:
-\begin{description}
-  \item[\texttt{tests/state/test\_lww.py}] verifies Last-Write-Wins merge behavior, stale-update rejection, tie breaking, full-state merge, partition convergence, delta buffers, and cursors. It covers FR03, FR04, FR06, NFR2, and NFR3.
-  \item[\texttt{tests/fd/} and \texttt{tests/membership/}] verify phi estimation, peer-table updates, heartbeat transitions, suspected/dead/alive recovery, gossip status merging, and membership snapshots. They cover FR05 and NFR4.
-  \item[\texttt{tests/protocol/test\_full\_sync\_handlers.py}] verifies \texttt{GET\_DELTA}, \texttt{DELTA\_UNAVAILABLE}, full-sync requests, full-sync responses, and recovery fallback. It covers FR03, FR06, and NFR2.
-  \item[\texttt{tests/protocol/test\_gossip\_state\_handlers.py}] verifies membership gossip, stale status rejection, delayed convergence after partitions, and topology merge. It covers FR05, NFR1, NFR3, and NFR4.
-  \item[\texttt{tests/runtime/test\_sensor\_update\_publisher.py}] verifies push-pull fanout, alive-peer targeting, and pull tracking. It covers FR03, NFR2, and NFR7.
-  \item[\texttt{tests/webapi/} and \texttt{tests/introspection/}] verify read-only HTTP endpoints and aggregate introspection snapshots. They cover FR05, FR07, FR08, and NFR4.
-  \item[\texttt{tests/sensors/}] verifies simulated sensor providers and sensor-manager configuration. It covers FR02 and NFR6.
-  \item[\texttt{tests/networking/}] verifies TCP framing, connection handling, concurrency, slow clients, bursts, limits, and shutdown. It covers FR01, FR03, NFR1, and NFR7.
-  \item[\texttt{tests/topology/}] verifies topology-state merge and full-mesh policy resolution. It covers FR05, FR07, NFR7, and IR3.
-  \item[\texttt{tests/integration/test\_deterministic\_state\_convergence.py}] verifies that six real in-process nodes converge to deterministic expected winners. It covers FR01, FR02, FR03, FR04, NFR1, NFR2, NFR7, and IR2.
-  \item[\texttt{tests/integration/test\_cluster\_harness.py}] verifies that the reusable cluster harness starts nodes and exposes state and membership. It covers FR01, FR05, FR07, IR1, and IR2.
-  \item[\texttt{tests/integration/test\_docker\_deterministic\_state\_convergence.py}] verifies convergence in container networking. It covers FR01, FR02, FR03, FR04, NFR2, NFR5, NFR7, IR1, and IR2.
-  \item[\texttt{tests/integration/test\_docker\_crash\_restart\_recovery.py}] verifies crash/restart recovery, state reconciliation, and membership recovery. It covers FR05, FR06, NFR3, NFR4, and NFR5.
-  \item[\texttt{tests/integration/test\_docker\_partition\_reconciliation.py}] verifies temporary network partition, divergence, healing, and reconciliation. It covers FR03, FR04, FR06, NFR2, and NFR3.
-  \item[\texttt{tests/integration/verify\_cluster.py}] performs a Docker smoke check that each node exposes replicated data from expected origins. It covers FR01, FR03, FR07, NFR5, IR1, and IR2.
-\end{description}
+In summary, validation provides layered coverage (unit + integration) across protocol, networking, state convergence, membership/topology, and fault resilience.
+Requirement linkage is explicit in test modules and covers the distributed-behavior, resilience, and observability targets described in \cref{requirements}.
 
-The rationale of the main distributed tests is also requirement-driven. Deterministic convergence tests prove that autonomous nodes exchange finite sensor streams and converge to the same Last-Write-Wins result, intercepting silent replication failures, incorrect fanout, or non-deterministic merge behavior. Docker convergence repeats the same idea in container networking, where DNS names, exposed ports, startup timing, and network isolation are closer to deployment conditions. Crash/restart recovery validates that a restarted node, after losing volatile in-memory state, can catch up through delta exchange or full synchronization, while surviving peers continue operating. Partition reconciliation checks that the system can remain locally available during a split, accept temporary divergence, and converge again after communication is restored. Full-sync handler tests specifically protect against the risk that stale cursors make recovery impossible, while web API and introspection tests protect the dashboard and external tools from unstable or incomplete observation contracts.
-
-The validation does not attempt to prove formal correctness, Byzantine tolerance, security properties, or durable recovery after full cluster loss. These aspects are outside the current project scope.
+Out of scope for this validation: formal verification, Byzantine tolerance, security hardening guarantees, and durable recovery after total cluster loss.
 
 \subsection{Acceptance test}\label{acceptance-test}
 
-Alongside automated validation, manual acceptance tests were also executed, primarily focused on the system's observable and experimental aspects. These tests were performed through:
+Manual acceptance tests complement automation and focus on aspects that are difficult to validate through assertions alone:
 \begin{itemize}
-  \item startup of base, 6-node, and 12-node Docker clusters;
-  \item direct inspection of \texttt{/api/state}, \texttt{/api/membership}, \texttt{/api/introspection}, and related derived views;
-  \item use of the node-served dashboard (for example \texttt{http://localhost:10000/ui}) to observe topology, recent events, replication metrics, and peer status;
-  \item execution of \texttt{manual\_tests/compose\_chaos.py} to selectively stop and restart services during cluster execution.
+  \item readability and coherence of observation outputs (\texttt{/api/state}, \texttt{/api/membership}, \texttt{/api/introspection});
+  \item dashboard consistency during runtime evolution (\texttt{/ui});
+  \item perceivable behavior during fault/recovery scenarios (including controlled stop/restart via \path{manual_tests/compose_chaos.py}).
 \end{itemize}
 
-These manual tests were intended to confirm properties that are difficult to capture fully through automated assertions alone: readability of exported state, quality of observability, temporal consistency of dashboards, and perceivable system behavior during reconfiguration and network transients.
-
-The manual component does not replace the automated suite, but complements it. In particular, it proved useful when acceptance criteria were also qualitative, for instance in evaluating the clarity of information shown to users or in visually diagnosing phenomena such as pull storms, accumulated delays, or rapid membership state transitions.
+Manual testing remains useful because these checks are partly qualitative (human-facing observability and diagnostic clarity), while automated tests remain the primary correctness mechanism.
 
 \clearpage
