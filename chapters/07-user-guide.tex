@@ -1,49 +1,165 @@
 \section{User Guide}\label{user-guide}
 
-This guide explains how to run the system, verify expected behavior, and collect evidence from the API and UI.
+This guide describes three practical usage scenarios: two real usage paths and one distributed test/demo path.
 
-\subsection{How to use the software (instructions)}
-
-Recommended demo setup (12 nodes), from the project root directory:
-
-\begin{verbatim}
-docker compose -f docker/docker-compose-12-nodes.yml up --build -d
-\end{verbatim}
-
-Open the dashboard on any node using:
-
-\begin{verbatim}
-http://<node-ip>:<WEB_API_PORT>/ui
-\end{verbatim}
-
-For the \texttt{docker/docker-compose-12-nodes.yml} setup, use \texttt{http://localhost:10000/ui} (node-1).
-
-Useful API checks (example on node-1, \texttt{localhost:10000}):
-
-\begin{verbatim}
-curl http://localhost:10000/api/membership
-curl http://localhost:10000/api/state
-curl http://localhost:10000/api/introspection/metrics
-\end{verbatim}
-
-Stop the cluster:
-
-\begin{verbatim}
-docker compose -f docker/docker-compose-12-nodes.yml down
-\end{verbatim}
-
-\subsection{Expected outcomes}
-
-After startup and a short convergence interval, the expected outcomes are:
-
-\begin{itemize} 
-  \item \texttt{/api/membership}: peers visible for the active topology (12 nodes in this setup);
-  \item \texttt{/api/state}: non-empty replicated sensor state, similar across nodes;
-  \item \texttt{/api/introspection/metrics}: non-zero gossip/replication activity;
-  \item dashboard (\texttt{/ui}): topology graph, peer liveness (\texttt{alive}/\texttt{suspected}/\texttt{dead}), sensor table, and recent events rendered without extra services.
+\subsection{Prerequisites}
+\begin{itemize}
+  \item Docker Desktop (with Docker Compose);
+  \item for native local execution only: Python 3.12+ and \texttt{pip};
+  \item available TCP ports from \texttt{9000+} and HTTP ports from \texttt{10000+}, depending on scenario.
 \end{itemize}
 
-If \texttt{get\_delta\_unavailable\_total} grows continuously, the delta buffer may be too small for current load or rejoin timing.
+\subsection{Scenario A (real use): published GHCR image}
+
+Goal: quickly start a node from the already published container image.
+
+\begin{enumerate}
+  \item Pull image:
+\begin{verbatim}
+docker pull ghcr.io/alexsantini10/distributed-sensor-hub:latest
+\end{verbatim}
+  \item Start one node:
+\begin{verbatim}
+docker run -d --name dsh-node-1 `
+-p 9000:9000 `
+-p 10000:10000 `
+-v "${PWD}:/work" `
+-e NODE_ID=node-1 `
+-e HOST=0.0.0.0 `
+-e PORT=9000 `
+-e BOOTSTRAP_PEERS= `
+-e LOG_LEVEL=INFO `
+-e LOG_FILE=/work/node-1.log `
+-e CLEAR_LOG=true `
+-e WEB_API_PORT=10000 `
+-e SENSORS=1 `
+-e SENSOR_0_TYPE=numeric `
+-e SENSOR_0_NAME=temperature `
+-e SENSOR_0_PERIOD_MS=1000 `
+-e SENSOR_0_MIN=18 `
+-e SENSOR_0_MAX=28 `
+-e SENSOR_0_UNIT=C `
+ghcr.io/alexsantini10/distributed-sensor-hub:latest
+\end{verbatim}
+  Start one node (Bash):
+\begin{verbatim}
+docker run -d --name dsh-node-1 \
+  -p 9000:9000 -p 10000:10000 \
+  -e NODE_ID=node-1 \
+  -e HOST=0.0.0.0 \
+  -e PORT=9000 \
+  -e BOOTSTRAP_PEERS= \
+  -e LOG_LEVEL=INFO \
+  -e LOG_FILE=/app/logs/node-1.log \
+  -e CLEAR_LOG=true \
+  -e WEB_API_PORT=10000 \
+  -e SENSORS=1 \
+  -e SENSOR_0_TYPE=numeric \
+  -e SENSOR_0_NAME=temperature \
+  -e SENSOR_0_PERIOD_MS=1000 \
+  -e SENSOR_0_MIN=18 \
+  -e SENSOR_0_MAX=28 \
+  -e SENSOR_0_UNIT=C \
+  ghcr.io/alexsantini10/distributed-sensor-hub:latest
+\end{verbatim}
+\end{enumerate}
+
+Important: run this Docker command from the directory where you want log files to be generated. With \texttt{-v "\$\{PWD\}:/work"} and \texttt{LOG\_FILE=/work/node-1.log}, logs are written to the current host directory.
+
+Expected results:
+\begin{itemize}
+  \item container state is \texttt{Up} (\texttt{docker ps});
+  \item API reachable on \texttt{http://localhost:10000/api/state};
+  \item UI reachable on \texttt{http://localhost:10000/ui}.
+\end{itemize}
+
+\subsection{Scenario B (real use): repository clone + native node startup}
+
+Goal: run one node natively with Python, useful for development/debugging.
+
+\begin{enumerate}
+  \item Clone and install dependencies:
+\begin{verbatim}
+git clone https://github.com/AlexSantini10/distributed-sensor-hub.git
+cd distributed-sensor-hub
+pip install -r requirements.txt
+\end{verbatim}
+  \item Start one node (PowerShell):
+\begin{verbatim}
+$env:NODE_ID="node-1"
+$env:HOST="0.0.0.0"
+$env:PORT="9000"
+$env:BOOTSTRAP_PEERS=""
+$env:LOG_LEVEL="INFO"
+$env:LOG_FILE="logs/node-1.log"
+$env:CLEAR_LOG="true"
+$env:WEB_API_PORT="10000"
+$env:SENSORS="1"
+$env:SENSOR_0_TYPE="numeric"
+$env:SENSOR_0_NAME="temperature"
+$env:SENSOR_0_PERIOD_MS="1000"
+$env:SENSOR_0_MIN="18"
+$env:SENSOR_0_MAX="28"
+$env:SENSOR_0_UNIT="C"
+python node.py
+\end{verbatim}
+  Start one node (Bash):
+\begin{verbatim}
+export NODE_ID="node-1"
+export HOST="0.0.0.0"
+export PORT="9000"
+export BOOTSTRAP_PEERS=""
+export LOG_LEVEL="INFO"
+export LOG_FILE="logs/node-1.log"
+export CLEAR_LOG="true"
+export WEB_API_PORT="10000"
+export SENSORS="1"
+export SENSOR_0_TYPE="numeric"
+export SENSOR_0_NAME="temperature"
+export SENSOR_0_PERIOD_MS="1000"
+export SENSOR_0_MIN="18"
+export SENSOR_0_MAX="28"
+export SENSOR_0_UNIT="C"
+python node.py
+\end{verbatim}
+\end{enumerate}
+
+Expected results:
+\begin{itemize}
+  \item Python process runs without critical startup errors;
+  \item HTTP endpoints are available (e.g., \texttt{/api/state}, \texttt{/api/membership}, \texttt{/api/introspection});
+  \item UI reachable on \texttt{http://localhost:10000/ui}.
+\end{itemize}
+
+If startup fails with missing environment variables, use the project \texttt{.env.example} as reference and ensure all required keys are defined (at minimum, \texttt{LOG\_LEVEL} must be set).
+
+\subsection{Scenario C (test/demo): repository clone + Docker Compose multi-node}
+
+Goal: validate distributed behavior on a multi-node setup.
+
+\begin{enumerate}
+  \item From repository root, start demo topology:
+\begin{verbatim}
+docker compose -f docker/docker-compose-6-nodes.yml up --build -d
+\end{verbatim}
+  \item Optional fault/recovery check:
+\begin{verbatim}
+docker compose -f docker/docker-compose-6-nodes.yml stop node-4
+docker compose -f docker/docker-compose-6-nodes.yml start node-4
+\end{verbatim}
+  \item Stop environment:
+\begin{verbatim}
+docker compose -f docker/docker-compose-6-nodes.yml down
+\end{verbatim}
+\end{enumerate}
+
+Expected results:
+\begin{itemize}
+  \item all nodes start and become mutually visible in membership/topology views;
+  \item sensor-state replication is visible across nodes through gossip push/pull;
+  \item convergence is visible from multiple UIs (e.g., \texttt{http://localhost:10000/ui}, \texttt{http://localhost:10003/ui});
+  \item after node restart, missing updates are recovered and convergence is restored.
+\end{itemize}
 
 \subsection{Screenshots (report evidence)}
 
