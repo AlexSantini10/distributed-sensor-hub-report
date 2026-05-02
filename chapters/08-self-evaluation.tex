@@ -1,32 +1,20 @@
 \section{Self-evaluation}\label{self-evaluation}
 
-This project was developed individually by Alex Santini. Accordingly, this self-evaluation reflects my full personal contribution to the design, implementation, validation, deployment, and documentation of the system.
+This project was developed individually by Alex Santini. This section therefore reflects my full personal contribution.
 
 \subsection{Alex Santini}
 
 \textbf{Role in the project.}
-As the sole contributor, I covered the entire development lifecycle: requirements analysis, protocol and architecture design, runtime implementation, testing, containerized deployment, observability tooling, and final report writing. This included both the distributed core and the supporting artifacts required to reproduce multi-node experiments.
+As sole contributor, I covered the full lifecycle: requirements, design, implementation, testing, deployment setup, observability, and report writing.
 
 \textbf{Main contributions.}
-My primary contribution was the design and implementation of a decentralized peer-to-peer sensor-state replication system based on autonomous nodes, TCP communication, JSON protocol messages, push-pull gossip, and timestamp-based Last-Writer-Wins conflict resolution.
-I also implemented membership and failure-observation mechanisms, including heartbeat-based liveness tracking and Phi Accrual failure suspicion, together with recovery paths based on incremental deltas and full-state synchronization.
-
-From an operational perspective, I prepared Docker Compose topologies for reproducible multi-node simulations and configured sensor profiles, bootstrap data, and fault-related parameters through environment variables.
-I also developed the read-only HTTP and introspection interfaces used by tests, scripts, and the optional web dashboard to inspect sensor values, membership, topology, events, and replication metrics.
-
-Validation was another major part of the project. I developed and maintained tests for protocol handling, networking, state convergence, membership, failure detection, sensors, web APIs, Docker-based scenarios, crash/restart recovery, and partition reconciliation. These tests helped map intended distributed-systems properties to observable behavior in repeatable experiments.
+I implemented a decentralized P2P sensor-state system with TCP + JSON messaging, gossip-based dissemination, LWW merge, membership/failure detection, and recovery (delta/full sync). I also prepared Docker-based multi-node execution, read-only HTTP/introspection endpoints, and layered automated validation (unit, in-process integration, Docker scenarios).
 
 \textbf{Product strengths.}
-The strongest aspect of the project is that its core distributed mechanisms are implemented explicitly rather than delegated to a broker or external middleware. This makes gossip dissemination, membership propagation, failure suspicion, timestamp-based conflict resolution, and recovery behavior directly observable.
-The project also benefits from a reproducible deployment model, a clear separation between control plane, data plane, and observability plane, and a validation strategy combining unit tests, integration tests, Docker scenarios, and manual observation.
+Main strengths are architectural clarity (layered node design), explicit decentralized behavior, reproducible deployment, and good observability/testing coverage for convergence and recovery scenarios.
 
 \textbf{Weaknesses and limitations.}
-The system remains a course-project prototype rather than a production-ready smart-city platform. It does not provide authentication, authorization, or transport encryption; runtime state is stored in memory rather than durable local storage; and the Last-Writer-Wins policy, while deterministic, is semantically simple.
-Larger topologies would also require a more systematic quantitative evaluation of gossip overhead, convergence latency, and failure-detector sensitivity.
-
-\textbf{Personal evaluation of contribution.}
-The most successful decisions were keeping the mandatory decentralized architecture understandable through a layered structure between the networking layer, protocol layer, and semantic modules, treating observability as a first-class concern, and validating recovery and convergence through reproducible Docker scenarios.
-The aspects that required the most iteration were balancing incremental anti-entropy with full synchronization and tuning failure detection under delayed or lossy communication. With more time, I would strengthen the quantitative evaluation, extend the system to more complex topology policies, add durable snapshots, and harden security boundaries while preserving the educational transparency of the implementation.
+The system is still a course-project prototype: no authentication/authorization/TLS, in-memory state only, and limited quantitative evaluation at larger scale.
 
 \textbf{Group members.}
 \begin{itemize}
