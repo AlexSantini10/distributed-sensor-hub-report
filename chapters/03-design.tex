@@ -1,4 +1,4 @@
-\section{Design}\label{design}
+\section{Design}\label{sec:design}
 
 This chapter explains the strategies used to meet the requirements identified during the analysis phase (\cref{requirements}). It presents the system design choices that support the functional goals and the main non-functional constraints.
 
@@ -126,16 +126,16 @@ In implementation terms, \texttt{JOIN\_REQUEST}/\texttt{PEER\_LIST} are event-dr
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.64\textwidth,keepaspectratio]{figures/design/interaction-bootstrap-peer-list.png}
-  \caption{Bootstrap and peer-list exchange interaction for node join.}
-  \label{fig:interaction-bootstrap-peer-list}
+  \includegraphics[width=0.84\textwidth,keepaspectratio]{figures/design/interaction-data-propagation-overview.png}
+  \caption{High-level overview of interaction and data propagation across peers and observer clients.}
+  \label{fig:interaction-data-propagation-overview}
 \end{figure}
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.64\textwidth,keepaspectratio]{figures/design/interaction-heartbeat-gossip.png}
-  \caption{Inter-node heartbeat and membership-gossip interaction.}
-  \label{fig:interaction-heartbeat-gossip}
+  \includegraphics[width=0.64\textwidth,keepaspectratio]{figures/design/interaction-bootstrap-peer-list.png}
+  \caption{Bootstrap and peer-list exchange interaction for node join.}
+  \label{fig:interaction-bootstrap-peer-list}
 \end{figure}
 
 \begin{figure}[H]
