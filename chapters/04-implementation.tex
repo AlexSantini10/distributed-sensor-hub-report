@@ -12,7 +12,7 @@ Peer communication is implemented over \textbf{TCP}, with a custom application p
 \begin{itemize}
   \item bootstrap and peer discovery (\texttt{JOIN\_REQUEST}, \texttt{PEER\_LIST});
   \item heartbeat liveness traffic (\texttt{PING}, \texttt{PONG});
-  \item membership/topology view convergence (\texttt{GOSSIP\_STATE}, distinct from heartbeat and discovery flows);
+  \item membership/topology/state view convergence (\texttt{GOSSIP\_STATE}, distinct from heartbeat and discovery flows);
   \item replicated sensor updates (\texttt{SENSOR\_UPDATE});
   \item incremental and full catch-up (\texttt{GET\_DELTA}, \texttt{DELTA\_UNAVAILABLE}, \texttt{FULL\_SYNC\_REQUEST}, \texttt{FULL\_SYNC\_RESPONSE}).
 \end{itemize}
@@ -42,7 +42,7 @@ Sensor convergence is implemented in application logic via deterministic LWW mer
 \textbf{Membership and topology runtime model.}
 Membership is maintained per node in a local \texttt{PeerTable}, updated by discovery traffic (\texttt{JOIN\_REQUEST}, \texttt{PEER\_LIST}), heartbeat evidence (\texttt{PING}/\texttt{PONG}), and gossip exchanges. Peer status is not binary up/down: it is evaluated as \texttt{alive}/\texttt{suspect}/\texttt{dead} from time-based evidence and configurable phi thresholds (e.g., \texttt{phi\_threshold\_suspect}, \texttt{phi\_threshold\_dead}).
 
-Membership updates use deterministic timestamp-based merge logic for liveness/status information, so node-local views still converge when updates are received in different orders. \texttt{GOSSIP\_STATE} carries not only peer presence but also metadata useful for convergence of cluster-view and observed topology state.
+Membership updates use deterministic timestamp-based merge logic for liveness/status information, so node-local views still converge when updates are received in different orders. \texttt{GOSSIP\_STATE} carries not only peer presence but also metadata useful for convergence of cluster-view, observed topology state, and node-reported state summaries used by the introspection layer.
 
 Topology is represented as explicit runtime state in a dedicated in-memory component (\texttt{TopologyStateStore}), updated by gossip/runtime flows and exposed as a read-only snapshot. Link-selection behavior is policy-driven (currently \texttt{full\_mesh}), configured through \texttt{TOPOLOGY\_POLICY}, so topology behavior can evolve without changing the peer protocol.
 
