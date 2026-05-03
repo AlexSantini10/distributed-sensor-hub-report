@@ -138,6 +138,15 @@ If startup fails with missing environment variables, use the project \texttt{.en
 Goal: validate distributed behavior on a multi-node setup.
 
 \begin{enumerate}
+  \item Download and extract the repository (or clone it), then move into the project directory:
+\begin{verbatim}
+# Option A (Git)
+git clone https://github.com/AlexSantini10/distributed-sensor-hub.git
+cd distributed-sensor-hub
+
+# Option B (ZIP)
+# Download from GitHub -> Extract ZIP -> open terminal in extracted folder
+\end{verbatim}
   \item From repository root, start demo topology:
 \begin{verbatim}
 docker compose -f docker/docker-compose-6-nodes.yml up --build -d
