@@ -37,3 +37,22 @@ If the build fails, then it is very likely that your LaTeX files contain errors.
 2. You can add new images in the `figures` directory.
 3. If needed, you can create a `tables` directory and put your tables in it.
 4. The general structure of the report is already defined in the `distributed-systems-final-report.tex` file.
+
+## SVG Export Automation (Local Pre-Commit)
+This repo includes a local hook that regenerates SVG-derived PDF assets before each commit.
+
+### One-time setup
+1. Install Inkscape and ensure `inkscape` is available in your terminal `PATH`.
+2. Enable repository hooks:
+```bash
+git config core.hooksPath .githooks
+```
+3. (Optional on Unix-like systems) mark hook as executable:
+```bash
+chmod +x .githooks/pre-commit
+```
+
+### What it does
+- Runs `scripts/export-svg-assets.ps1`.
+- Regenerates `figures/design/*_svg-tex.pdf`, `*_svg-tex.pdf_tex`, and `*_svg-raw.pdf` from `figures/design/*.svg`.
+- Stages regenerated assets automatically before commit.

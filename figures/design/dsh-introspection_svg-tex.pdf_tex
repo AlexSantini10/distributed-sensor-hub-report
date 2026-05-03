@@ -1,0 +1,81 @@
+%% Creator: Inkscape 1.4.3 (0d15f75, 2025-12-25), www.inkscape.org
+%% PDF/EPS/PS + LaTeX output extension by Johan Engelen, 2010
+%% Accompanies image file 'dsh-introspection_svg-tex.pdf' (pdf, eps, ps)
+%%
+%% To include the image in your LaTeX document, write
+%%   \input{<filename>.pdf_tex}
+%%  instead of
+%%   \includegraphics{<filename>.pdf}
+%% To scale the image, write
+%%   \def\svgwidth{<desired width>}
+%%   \input{<filename>.pdf_tex}
+%%  instead of
+%%   \includegraphics[width=<desired width>]{<filename>.pdf}
+%%
+%% Images with a different path to the parent latex file can
+%% be accessed with the `import' package (which may need to be
+%% installed) using
+%%   \usepackage{import}
+%% in the preamble, and then including the image with
+%%   \import{<path to file>}{<filename>.pdf_tex}
+%% Alternatively, one can specify
+%%   \graphicspath{{<path to file>/}}
+%% 
+%% For more information, please see info/svg-inkscape on CTAN:
+%%   http://tug.ctan.org/tex-archive/info/svg-inkscape
+%%
+\begingroup%
+  \makeatletter%
+  \providecommand\color[2][]{%
+    \errmessage{(Inkscape) Color is used for the text in Inkscape, but the package 'color.sty' is not loaded}%
+    \renewcommand\color[2][]{}%
+  }%
+  \providecommand\transparent[1]{%
+    \errmessage{(Inkscape) Transparency is used (non-zero) for the text in Inkscape, but the package 'transparent.sty' is not loaded}%
+    \renewcommand\transparent[1]{}%
+  }%
+  \providecommand\rotatebox[2]{#2}%
+  \newcommand*\fsize{\dimexpr\f@size pt\relax}%
+  \newcommand*\lineheight[1]{\fontsize{\fsize}{#1\fsize}\selectfont}%
+  \ifx\svgwidth\undefined%
+    \setlength{\unitlength}{605bp}%
+    \ifx\svgscale\undefined%
+      \relax%
+    \else%
+      \setlength{\unitlength}{\unitlength * \real{\svgscale}}%
+    \fi%
+  \else%
+    \setlength{\unitlength}{\svgwidth}%
+  \fi%
+  \global\let\svgwidth\undefined%
+  \global\let\svgscale\undefined%
+  \makeatother%
+  \begin{picture}(1,0.4)%
+    \lineheight{1}%
+    \setlength\tabcolsep{0pt}%
+    \put(0,0){\includegraphics[width=\unitlength,page=1]{dsh-introspection_svg-tex.pdf}}%
+    \put(0.09214878,0.35570248){\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}Domain\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=2]{dsh-introspection_svg-tex.pdf}}%
+    \put(0.50558681,0.18628099){\color[rgb]{0.36470588,0.42745098,0.49411765}\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}read-only\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=3]{dsh-introspection_svg-tex.pdf}}%
+    \put(0.74021488,0.24578512){\color[rgb]{0.36470588,0.42745098,0.49411765}\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}HTTP\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=4]{dsh-introspection_svg-tex.pdf}}%
+    \put(0.74021488,0.12677686){\color[rgb]{0.36470588,0.42745098,0.49411765}\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}HTTP\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=5]{dsh-introspection_svg-tex.pdf}}%
+    \put(0.09214878,0.29586777){\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}State\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=6]{dsh-introspection_svg-tex.pdf}}%
+    \put(0.09214878,0.17685951){\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}Membership\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=7]{dsh-introspection_svg-tex.pdf}}%
+    \put(0.09214878,0.05785125){\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}Topology\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=8]{dsh-introspection_svg-tex.pdf}}%
+    \put(0.33876036,0.17685951){\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}Introspection Service\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=9]{dsh-introspection_svg-tex.pdf}}%
+    \put(0.62785122,0.18677687){\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}Web API\end{tabular}}}}%
+    \put(0.62785122,0.16694216){\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}(/api/*)\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=10]{dsh-introspection_svg-tex.pdf}}%
+    \put(0.89986776,0.23636364){\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}Web UI\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=11]{dsh-introspection_svg-tex.pdf}}%
+    \put(0.89986776,0.12727274){\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}Automated Tool\end{tabular}}}}%
+    \put(0.89986776,0.10743803){\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}(script / monitor / test)\end{tabular}}}}%
+  \end{picture}%
+\endgroup%

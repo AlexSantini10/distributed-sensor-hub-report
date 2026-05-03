@@ -1,0 +1,103 @@
+%% Creator: Inkscape 1.4.3 (0d15f75, 2025-12-25), www.inkscape.org
+%% PDF/EPS/PS + LaTeX output extension by Johan Engelen, 2010
+%% Accompanies image file 'dsh-node-layers_svg-tex.pdf' (pdf, eps, ps)
+%%
+%% To include the image in your LaTeX document, write
+%%   \input{<filename>.pdf_tex}
+%%  instead of
+%%   \includegraphics{<filename>.pdf}
+%% To scale the image, write
+%%   \def\svgwidth{<desired width>}
+%%   \input{<filename>.pdf_tex}
+%%  instead of
+%%   \includegraphics[width=<desired width>]{<filename>.pdf}
+%%
+%% Images with a different path to the parent latex file can
+%% be accessed with the `import' package (which may need to be
+%% installed) using
+%%   \usepackage{import}
+%% in the preamble, and then including the image with
+%%   \import{<path to file>}{<filename>.pdf_tex}
+%% Alternatively, one can specify
+%%   \graphicspath{{<path to file>/}}
+%% 
+%% For more information, please see info/svg-inkscape on CTAN:
+%%   http://tug.ctan.org/tex-archive/info/svg-inkscape
+%%
+\begingroup%
+  \makeatletter%
+  \providecommand\color[2][]{%
+    \errmessage{(Inkscape) Color is used for the text in Inkscape, but the package 'color.sty' is not loaded}%
+    \renewcommand\color[2][]{}%
+  }%
+  \providecommand\transparent[1]{%
+    \errmessage{(Inkscape) Transparency is used (non-zero) for the text in Inkscape, but the package 'transparent.sty' is not loaded}%
+    \renewcommand\transparent[1]{}%
+  }%
+  \providecommand\rotatebox[2]{#2}%
+  \newcommand*\fsize{\dimexpr\f@size pt\relax}%
+  \newcommand*\lineheight[1]{\fontsize{\fsize}{#1\fsize}\selectfont}%
+  \ifx\svgwidth\undefined%
+    \setlength{\unitlength}{632bp}%
+    \ifx\svgscale\undefined%
+      \relax%
+    \else%
+      \setlength{\unitlength}{\unitlength * \real{\svgscale}}%
+    \fi%
+  \else%
+    \setlength{\unitlength}{\svgwidth}%
+  \fi%
+  \global\let\svgwidth\undefined%
+  \global\let\svgscale\undefined%
+  \makeatother%
+  \begin{picture}(1,0.78164557)%
+    \lineheight{1}%
+    \setlength\tabcolsep{0pt}%
+    \put(0,0){\includegraphics[width=\unitlength,page=1]{dsh-node-layers_svg-tex.pdf}}%
+    \put(0.25326445,0.73925764){\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}Node A\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=2]{dsh-node-layers_svg-tex.pdf}}%
+    \put(0.74673557,0.73925764){\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}Node B\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=3]{dsh-node-layers_svg-tex.pdf}}%
+    \put(0.16570496,0.44159336){\color[rgb]{0.49019608,0.54509804,0.54901961}\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}phi status\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=4]{dsh-node-layers_svg-tex.pdf}}%
+    \put(0.39124658,0.44159336){\color[rgb]{0.49019608,0.54509804,0.54901961}\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}local events\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=5]{dsh-node-layers_svg-tex.pdf}}%
+    \put(0.51107148,0.07149){\color[rgb]{0.18039216,0.5254902,0.75686275}\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}TCP P2P\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=6]{dsh-node-layers_svg-tex.pdf}}%
+    \put(0.64019644,0.44159336){\color[rgb]{0.49019608,0.54509804,0.54901961}\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}phi status\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=7]{dsh-node-layers_svg-tex.pdf}}%
+    \put(0.86890129,0.44159336){\color[rgb]{0.49019608,0.54509804,0.54901961}\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}local events\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=8]{dsh-node-layers_svg-tex.pdf}}%
+    \put(0.31020343,0.68136967){\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}Runtime\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=9]{dsh-node-layers_svg-tex.pdf}}%
+    \put(0.10459046,0.53111404){\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}Failure Detection\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=10]{dsh-node-layers_svg-tex.pdf}}%
+    \put(0.37821387,0.53111404){\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}Sensors\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=11]{dsh-node-layers_svg-tex.pdf}}%
+    \put(0.1393865,0.35586855){\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}Membership\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=12]{dsh-node-layers_svg-tex.pdf}}%
+    \put(0.28964213,0.35586855){\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}State\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=13]{dsh-node-layers_svg-tex.pdf}}%
+    \put(0.42882629,0.35586855){\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}Topology\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=14]{dsh-node-layers_svg-tex.pdf}}%
+    \put(0.37030568,0.20561292){\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}Protocol\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=15]{dsh-node-layers_svg-tex.pdf}}%
+    \put(0.37030568,0.05535729){\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}Networking / TCP\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=16]{dsh-node-layers_svg-tex.pdf}}%
+    \put(0.74989885,0.68136967){\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}Runtime\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=17]{dsh-node-layers_svg-tex.pdf}}%
+    \put(0.59806158,0.53111404){\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}Failure Detection\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=18]{dsh-node-layers_svg-tex.pdf}}%
+    \put(0.87168499,0.53111404){\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}Sensors\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=19]{dsh-node-layers_svg-tex.pdf}}%
+    \put(0.59806158,0.35586855){\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}Membership\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=20]{dsh-node-layers_svg-tex.pdf}}%
+    \put(0.74831721,0.35586855){\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}State\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=21]{dsh-node-layers_svg-tex.pdf}}%
+    \put(0.88750137,0.35586855){\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}Topology\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=22]{dsh-node-layers_svg-tex.pdf}}%
+    \put(0.65183728,0.20561292){\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}Protocol\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=23]{dsh-node-layers_svg-tex.pdf}}%
+    \put(0.65183728,0.05535729){\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}Networking / TCP\end{tabular}}}}%
+  \end{picture}%
+\endgroup%

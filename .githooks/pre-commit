@@ -1,0 +1,16 @@
+#!/bin/sh
+set -e
+
+echo "Running SVG asset export..."
+
+if command -v pwsh >/dev/null 2>&1; then
+  pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/export-svg-assets.ps1
+elif command -v powershell >/dev/null 2>&1; then
+  powershell -NoProfile -ExecutionPolicy Bypass -File scripts/export-svg-assets.ps1
+else
+  echo "PowerShell not found (pwsh/powershell). Skipping SVG export."
+  exit 0
+fi
+
+git add figures/design/*_svg-tex.pdf figures/design/*_svg-tex.pdf_tex figures/design/*_svg-raw.pdf 2>/dev/null || true
+
